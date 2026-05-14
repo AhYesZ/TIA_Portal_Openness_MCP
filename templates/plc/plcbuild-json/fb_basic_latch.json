@@ -1,0 +1,60 @@
+{
+  "kind": "fb",
+  "tool": "PlcBuildAndImport",
+  "description": "Generic enable, disable, fault latch and reset example.",
+  "json": {
+    "blockName": "FB_BasicLatch",
+    "blockNumber": 110,
+    "inputs": [
+      { "name": "Enable", "datatype": "Bool" },
+      { "name": "Disable", "datatype": "Bool" },
+      { "name": "FaultInput", "datatype": "Bool" },
+      { "name": "Reset", "datatype": "Bool" }
+    ],
+    "outputs": [
+      { "name": "Active", "datatype": "Bool" },
+      { "name": "Fault", "datatype": "Bool" }
+    ],
+    "statics": [
+      { "name": "ActiveLatch", "datatype": "Bool" },
+      { "name": "FaultLatch", "datatype": "Bool" }
+    ],
+    "structuredText": {
+      "operations": [
+        { "op": "if", "condition": "FaultInput" },
+        { "op": "assignment", "target": "FaultLatch", "literalValue": "TRUE", "indent": 1 },
+        { "op": "assignment", "target": "ActiveLatch", "literalValue": "FALSE", "indent": 1 },
+        { "op": "elsif", "condition": "Reset" },
+        { "op": "assignment", "target": "FaultLatch", "literalValue": "FALSE", "indent": 1 },
+        { "op": "endif" },
+        { "op": "token", "text": "IF" },
+        { "op": "blank" },
+        { "op": "symbol", "name": "Disable" },
+        { "op": "blank" },
+        { "op": "token", "text": "OR" },
+        { "op": "blank" },
+        { "op": "symbol", "name": "FaultLatch" },
+        { "op": "blank" },
+        { "op": "token", "text": "THEN" },
+        { "op": "newline" },
+        { "op": "assignment", "target": "ActiveLatch", "literalValue": "FALSE", "indent": 1 },
+        { "op": "token", "text": "ELSIF" },
+        { "op": "blank" },
+        { "op": "symbol", "name": "Enable" },
+        { "op": "blank" },
+        { "op": "token", "text": "AND" },
+        { "op": "blank" },
+        { "op": "token", "text": "NOT" },
+        { "op": "blank" },
+        { "op": "symbol", "name": "FaultLatch" },
+        { "op": "blank" },
+        { "op": "token", "text": "THEN" },
+        { "op": "newline" },
+        { "op": "assignment", "target": "ActiveLatch", "literalValue": "TRUE", "indent": 1 },
+        { "op": "endif" },
+        { "op": "assignment", "target": "Active", "source": "ActiveLatch" },
+        { "op": "assignment", "target": "Fault", "source": "FaultLatch" }
+      ]
+    }
+  }
+}

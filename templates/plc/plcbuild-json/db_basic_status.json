@@ -1,0 +1,15 @@
+{
+  "kind": "globaldb",
+  "tool": "PlcBuildAndImport",
+  "description": "Generic status DB using UDT_BasicStatus.",
+  "json": {
+    "dbName": "DB_BasicStatus",
+    "dbNumber": 100,
+    "staticMembers": [
+      { "name": "Status", "datatype": "\"UDT_BasicStatus\"" },
+      { "name": "EnableRequest", "datatype": "Bool", "startValue": "false" },
+      { "name": "ResetRequest", "datatype": "Bool", "startValue": "false" },
+      { "name": "CycleCounter", "datatype": "DInt", "startValue": "0" }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+*.log
+.vs/
+**/obj/
+**/bin/Debug/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini

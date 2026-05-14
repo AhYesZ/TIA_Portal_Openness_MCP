@@ -1,0 +1,415 @@
+{
+  "screen": {
+    "width": 1280,
+    "height": 800,
+    "BackColor": "0xFFF4F7FB"
+  },
+  "items": [
+    {
+      "type": "Rectangle",
+      "name": "Header",
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 64,
+      "properties": {
+        "BackColor": "0xFF172033",
+        "BorderColor": "0xFF172033",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Text",
+      "name": "Title",
+      "left": 24,
+      "top": 14,
+      "width": 420,
+      "height": 32,
+      "text": "Overview",
+      "properties": {
+        "ForeColor": "0xFFFFFFFF"
+      },
+      "font": {
+        "Size": 23
+      }
+    },
+    {
+      "type": "Text",
+      "name": "HeaderNote",
+      "left": 960,
+      "top": 22,
+      "width": 290,
+      "height": 20,
+      "text": "PLC and HMI linked status",
+      "properties": {
+        "ForeColor": "0xFFBFD1E5"
+      },
+      "font": {
+        "Size": 12
+      }
+    },
+    {
+      "type": "Rectangle",
+      "name": "HeaderAccent",
+      "left": 0,
+      "top": 60,
+      "width": 1280,
+      "height": 4,
+      "properties": {
+        "BackColor": "0xFF3B82F6",
+        "BorderColor": "0xFF3B82F6",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Rectangle",
+      "name": "Panel_Status",
+      "left": 24,
+      "top": 92,
+      "width": 380,
+      "height": 250,
+      "properties": {
+        "BackColor": "0xFFFFFFFF",
+        "BorderColor": "0xFFD4DDE8",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Text",
+      "name": "StatusTitle",
+      "left": 48,
+      "top": 116,
+      "width": 220,
+      "height": 26,
+      "text": "Status",
+      "properties": {
+        "ForeColor": "0xFF172033"
+      },
+      "font": {
+        "Size": 17
+      }
+    },
+    {
+      "type": "Rectangle",
+      "name": "Lamp_Active",
+      "left": 48,
+      "top": 164,
+      "width": 140,
+      "height": 58,
+      "properties": {
+        "BackColor": "0xFFDCFCE7",
+        "BorderColor": "0xFF86EFAC",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Text",
+      "name": "LampActiveText",
+      "left": 76,
+      "top": 184,
+      "width": 90,
+      "height": 20,
+      "text": "ACTIVE",
+      "properties": {
+        "ForeColor": "0xFF166534"
+      },
+      "font": {
+        "Size": 13
+      }
+    },
+    {
+      "type": "Rectangle",
+      "name": "Lamp_Error",
+      "left": 220,
+      "top": 164,
+      "width": 140,
+      "height": 58,
+      "properties": {
+        "BackColor": "0xFFFEE2E2",
+        "BorderColor": "0xFFFCA5A5",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Text",
+      "name": "LampErrorText",
+      "left": 254,
+      "top": 184,
+      "width": 80,
+      "height": 20,
+      "text": "ERROR",
+      "properties": {
+        "ForeColor": "0xFF991B1B"
+      },
+      "font": {
+        "Size": 13
+      }
+    },
+    {
+      "type": "Text",
+      "name": "Lbl_Step",
+      "left": 48,
+      "top": 250,
+      "width": 130,
+      "height": 20,
+      "text": "Step number",
+      "properties": {
+        "ForeColor": "0xFF607086"
+      },
+      "font": {
+        "Size": 12
+      }
+    },
+    {
+      "type": "IOField",
+      "name": "IO_StepNo",
+      "left": 220,
+      "top": 242,
+      "width": 140,
+      "height": 36,
+      "properties": {
+        "BackColor": "0xFFFFFFFF",
+        "ForeColor": "0xFF172033",
+        "BorderColor": "0xFF94A3B8",
+        "BorderWidth": 1
+      },
+      "font": {
+        "Size": 13
+      }
+    },
+    {
+      "type": "Rectangle",
+      "name": "Panel_Values",
+      "left": 432,
+      "top": 92,
+      "width": 404,
+      "height": 250,
+      "properties": {
+        "BackColor": "0xFFFFFFFF",
+        "BorderColor": "0xFFD4DDE8",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Text",
+      "name": "ValuesTitle",
+      "left": 456,
+      "top": 116,
+      "width": 220,
+      "height": 26,
+      "text": "Values",
+      "properties": {
+        "ForeColor": "0xFF172033"
+      },
+      "font": {
+        "Size": 17
+      }
+    },
+    {
+      "type": "Text",
+      "name": "Lbl_Setpoint",
+      "left": 456,
+      "top": 166,
+      "width": 120,
+      "height": 20,
+      "text": "Setpoint",
+      "properties": {
+        "ForeColor": "0xFF607086"
+      },
+      "font": {
+        "Size": 12
+      }
+    },
+    {
+      "type": "IOField",
+      "name": "IO_Setpoint",
+      "left": 620,
+      "top": 158,
+      "width": 150,
+      "height": 36,
+      "properties": {
+        "BackColor": "0xFFFFFFFF",
+        "ForeColor": "0xFF172033",
+        "BorderColor": "0xFF94A3B8",
+        "BorderWidth": 1
+      },
+      "font": {
+        "Size": 13
+      }
+    },
+    {
+      "type": "Text",
+      "name": "Lbl_Actual",
+      "left": 456,
+      "top": 218,
+      "width": 120,
+      "height": 20,
+      "text": "Actual",
+      "properties": {
+        "ForeColor": "0xFF607086"
+      },
+      "font": {
+        "Size": 12
+      }
+    },
+    {
+      "type": "IOField",
+      "name": "IO_Actual",
+      "left": 620,
+      "top": 210,
+      "width": 150,
+      "height": 36,
+      "properties": {
+        "BackColor": "0xFFFFFFFF",
+        "ForeColor": "0xFF172033",
+        "BorderColor": "0xFF94A3B8",
+        "BorderWidth": 1
+      },
+      "font": {
+        "Size": 13
+      }
+    },
+    {
+      "type": "Text",
+      "name": "Lbl_Output",
+      "left": 456,
+      "top": 270,
+      "width": 120,
+      "height": 20,
+      "text": "Output",
+      "properties": {
+        "ForeColor": "0xFF607086"
+      },
+      "font": {
+        "Size": 12
+      }
+    },
+    {
+      "type": "IOField",
+      "name": "IO_Output",
+      "left": 620,
+      "top": 262,
+      "width": 150,
+      "height": 36,
+      "properties": {
+        "BackColor": "0xFFFFFFFF",
+        "ForeColor": "0xFF172033",
+        "BorderColor": "0xFF94A3B8",
+        "BorderWidth": 1
+      },
+      "font": {
+        "Size": 13
+      }
+    },
+    {
+      "type": "Rectangle",
+      "name": "Panel_Command",
+      "left": 864,
+      "top": 92,
+      "width": 392,
+      "height": 250,
+      "properties": {
+        "BackColor": "0xFFFFFFFF",
+        "BorderColor": "0xFFD4DDE8",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Text",
+      "name": "CommandTitle",
+      "left": 888,
+      "top": 116,
+      "width": 220,
+      "height": 26,
+      "text": "Commands",
+      "properties": {
+        "ForeColor": "0xFF172033"
+      },
+      "font": {
+        "Size": 17
+      }
+    },
+    {
+      "type": "Button",
+      "name": "Btn_Enable",
+      "left": 888,
+      "top": 164,
+      "width": 150,
+      "height": 48,
+      "text": "ENABLE",
+      "properties": {
+        "BackColor": "0xFF16A34A",
+        "ForeColor": "0xFFFFFFFF",
+        "BorderColor": "0xFF1D4ED8",
+        "BorderWidth": 1
+      },
+      "font": {
+        "Size": 14
+      }
+    },
+    {
+      "type": "Button",
+      "name": "Btn_Disable",
+      "left": 1060,
+      "top": 164,
+      "width": 150,
+      "height": 48,
+      "text": "DISABLE",
+      "properties": {
+        "BackColor": "0xFFDC2626",
+        "ForeColor": "0xFFFFFFFF",
+        "BorderColor": "0xFF1D4ED8",
+        "BorderWidth": 1
+      },
+      "font": {
+        "Size": 14
+      }
+    },
+    {
+      "type": "Button",
+      "name": "Btn_Reset",
+      "left": 888,
+      "top": 236,
+      "width": 322,
+      "height": 48,
+      "text": "RESET",
+      "properties": {
+        "BackColor": "0xFFFFFBEB",
+        "ForeColor": "0xFF92400E",
+        "BorderColor": "0xFF1D4ED8",
+        "BorderWidth": 1
+      },
+      "font": {
+        "Size": 14
+      }
+    },
+    {
+      "type": "Rectangle",
+      "name": "Panel_Footer",
+      "left": 24,
+      "top": 390,
+      "width": 1232,
+      "height": 260,
+      "properties": {
+        "BackColor": "0xFFFFFFFF",
+        "BorderColor": "0xFFD4DDE8",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Text",
+      "name": "FooterText",
+      "left": 48,
+      "top": 414,
+      "width": 1120,
+      "height": 22,
+      "text": "General-purpose project page with PLC-backed values and operator commands.",
+      "properties": {
+        "ForeColor": "0xFF475569"
+      },
+      "font": {
+        "Size": 13
+      }
+    }
+  ]
+}

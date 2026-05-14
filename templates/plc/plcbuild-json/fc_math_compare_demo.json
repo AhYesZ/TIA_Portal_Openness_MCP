@@ -1,0 +1,30 @@
+{
+  "kind": "fc",
+  "tool": "PlcBuildAndImport",
+  "description": "Generic math, compare, ABS, LIMIT and quality flag example.",
+  "json": {
+    "blockName": "FC_MathCompareDemo",
+    "blockNumber": 150,
+    "inputs": [
+      { "name": "Setpoint", "datatype": "Real" },
+      { "name": "Actual", "datatype": "Real" },
+      { "name": "Deadband", "datatype": "Real" },
+      { "name": "OutMin", "datatype": "Real" },
+      { "name": "OutMax", "datatype": "Real" }
+    ],
+    "outputs": [
+      { "name": "ErrorValue", "datatype": "Real" },
+      { "name": "AbsError", "datatype": "Real" },
+      { "name": "OutputValue", "datatype": "Real" },
+      { "name": "InTolerance", "datatype": "Bool" }
+    ],
+    "structuredText": {
+      "operations": [
+        { "op": "line", "items": [ { "sym": "ErrorValue" }, { "token": ":=" }, { "sym": "Setpoint" }, { "token": "-" }, { "sym": "Actual" } ] },
+        { "op": "line", "items": [ { "sym": "AbsError" }, { "token": ":=" }, { "token": "ABS" }, { "raw": "(" }, { "sym": "ErrorValue" }, { "raw": ")" } ] },
+        { "op": "line", "items": [ { "sym": "OutputValue" }, { "token": ":=" }, { "token": "LIMIT" }, { "raw": "(" }, { "token": "MN" }, { "token": ":=" }, { "sym": "OutMin" }, { "token": "," }, { "token": "IN" }, { "token": ":=" }, { "sym": "ErrorValue" }, { "token": "," }, { "token": "MX" }, { "token": ":=" }, { "sym": "OutMax" }, { "raw": ")" } ] },
+        { "op": "line", "items": [ { "sym": "InTolerance" }, { "token": ":=" }, { "sym": "AbsError" }, { "token": "<=" }, { "sym": "Deadband" } ] }
+      ]
+    }
+  }
+}

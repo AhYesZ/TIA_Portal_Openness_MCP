@@ -1,0 +1,19 @@
+{
+  "kind": "udt",
+  "tool": "PlcBuildAndImport",
+  "description": "Generic status UDT.",
+  "json": {
+    "name": "UDT_BasicStatus",
+    "members": [
+      { "name": "Active", "datatype": "Bool" },
+      { "name": "Ready", "datatype": "Bool" },
+      { "name": "Error", "datatype": "Bool" },
+      { "name": "Warning", "datatype": "Bool" },
+      { "name": "State", "datatype": "Int", "startValue": "0" },
+      { "name": "ErrorCode", "datatype": "Int", "startValue": "0" },
+      { "name": "Setpoint", "datatype": "Real", "startValue": "0.0" },
+      { "name": "Actual", "datatype": "Real", "startValue": "0.0" },
+      { "name": "Output", "datatype": "Real", "startValue": "0.0" }
+    ]
+  }
+}
