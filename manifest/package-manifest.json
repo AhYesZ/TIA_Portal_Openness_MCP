@@ -1,9 +1,10 @@
 {
   "schemaVersion": "2026-05-25",
+  "bundleVersion": "0.0.29",
   "packageName": "TIA_MCP_交付包_20260525_V20S7DCL_184330",
   "packageType": "tia-portal-mcp-complete-offline-delivery-bundle",
   "generatedAt": "2026-05-25T18:43:30+08:00",
-  "refreshedAt": "2026-05-25T18:43:30+08:00",
+  "refreshedAt": "2026-05-26T19:10:00+08:00",
   "target": {
     "tiaPortalMajorVersion": [20, 21],
     "publicApiPathExample": "D:\\app\\TIA21\\Portal V21\\PublicAPI or D:\\app\\TIA20\\Portal V20\\PublicAPI",
@@ -80,7 +81,7 @@
     ]
   },
   "validationSnapshot": {
-    "performedAt": "2026-05-26T11:08:00+08:00",
+    "performedAt": "2026-05-26T19:10:00+08:00",
     "expectedCoreFilesPresent": true,
     "blueprintRequiredBundleFilesPresent": true,
     "runtimeExePresent": true,

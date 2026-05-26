@@ -1,4 +1,4 @@
-# TIA Portal MCP 完整交付包（2026-05-25 / V20+V21 + S7DCL）
+# TIA Portal MCP 完整交付包（**v0.0.29** / 2026-05-25 Base / V20+V21 + S7DCL）
 
 在 **Windows + TIA Portal V20 或 V21** 下，通过 **MCP（stdio 或 HTTP）** 驱动博途：建项目、加硬件、生成 PLC（Tag/UDT/DB/SCL/LAD）、生成 **WinCC Unified** 画面与事件、编译诊断、保存。  
 包内含 **已编译运行时**、Skill、静态工具清单、能力矩阵、PLC/HMI 模板、**一键可读的项目蓝图**与手册。**不要求**另行克隆源码仓库。

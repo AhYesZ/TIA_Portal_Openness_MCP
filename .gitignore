@@ -2,8 +2,8 @@
 *.startup.log
 .vs/
 **/obj/
-**/bin/
-**/bin-v20/
+**/bin/Debug/
+**/bin-v20/Debug/
 TiaMcp_Output/
 *.user
 *.suo

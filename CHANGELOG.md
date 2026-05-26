@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.0.29] - 2026-05-26
+
+### 完整交付包（含运行时）+ GitHub Release
+
+- Git 跟踪 `tools/tiaportal-mcp/src/TiaMcpServer/bin/Release/net48/`（V21）与 `bin-v20/Release/net48/`（V20）已编译 `TiaMcpServer.exe` 及依赖 DLL；`.gitignore` 仅排除 `bin/Debug`、`bin-v20/Debug` 与 `obj`，不再排除 Release 产物。
+- [GitHub Releases / v0.0.29](https://github.com/bulaofen0036-coder/TIA_MCP_260514/releases/tag/v0.0.29) 提供 **`TIA_MCP_完整交付包_v0.0.29.zip`**：与仓库根目录内容一致（含双版本 exe），打包时排除 `.git` 与 `TiaMcp_Output/`。
+- `manifest/package-manifest.json`：`bundleVersion` **0.0.29**，`refreshedAt` / `validationSnapshot.performedAt` 对齐本次推送。
+
 ## [0.0.28] - 2026-05-26
 
 ### V20 + V21 双版本支持
@@ -24,7 +32,7 @@
 ### GitHub 交付包同步
 
 - 公开仓库 [bulaofen0036-coder/TIA_MCP_260514](https://github.com/bulaofen0036-coder/TIA_MCP_260514) 从 `TIA_MCP_交付包_20260512_151308` 全量刷新至 `TIA_MCP_交付包_20260525_V20S7DCL_184330`。
-- 仓库跟踪源码、模板、文档与 Skill；`bin/` / `bin-v20/` 运行时需在本地编译或从离线 zip 获取。
+- 首次推送以源码为主；**V21/V20 双 exe 运行时**自 **v0.0.29** 起纳入仓库并随 Release zip 分发。
 
 ## [0.0.27] - 2026-05-09
 
