@@ -8,6 +8,8 @@
 > lock exists only as an opt-in (active solely if the owner ships a
 > `commercial.lock`); the public build ships none.
 
+![Architecture](docs/assets/architecture.svg)
+
 Drive **Siemens TIA Portal V20 or V21** from any **MCP** client (stdio or HTTP):
 create projects, add hardware, generate PLC objects (Tag / UDT / DB / SCL / LAD),
 build **WinCC Unified** screens and events, compile-and-diagnose, and save —
