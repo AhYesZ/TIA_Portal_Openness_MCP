@@ -51,7 +51,7 @@
     "bundleValidationScript": "scripts/Validate-Bundle.ps1"
   },
   "capabilities": {
-    "mcpToolCount": 188,
+    "mcpToolCount": 184,
     "mcpToolLayers": {
       "L0": 6,
       "L1": 29,
