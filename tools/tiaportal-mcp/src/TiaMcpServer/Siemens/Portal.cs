@@ -46,7 +46,6 @@ namespace TiaMcpServer.Siemens
         private readonly ILogger<Portal>? _logger;
         public string? LastAddDeviceError { get; private set; }
         public string? LastConnectError { get; private set; }
-        public string? LastImportError { get; private set; }
 
         #region ctor
 
@@ -3222,13 +3221,12 @@ namespace TiaMcpServer.Siemens
             return TryExportEngineeringObject(table, exportPath, out _);
         }
 
-        public bool ImportPlcTagTable(string softwarePath, string folderPath, string importPath)
+        public void ImportPlcTagTable(string softwarePath, string folderPath, string importPath)
         {
-            LastImportError = null;
-            if (IsProjectNull()) return false;
+            if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
 
             var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return false;
+            if (plc == null) throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'");
 
             try
             {
@@ -3238,19 +3236,18 @@ namespace TiaMcpServer.Siemens
                 // TagTables collection lives on group
                 var tables = TryGetPropertyValue(group, "TagTables") ?? TryGetPropertyValue(root, "TagTables");
                 if (tables == null)
-                {
-                    LastImportError = $"TagTables collection not found. plcType={plc.GetType().FullName} groupType={group.GetType().FullName}";
-                    return false;
-                }
+                    throw new PortalException(PortalErrorCode.NotFound, $"TagTables collection not found. plcType={plc.GetType().FullName} groupType={group.GetType().FullName}");
 
-                if (TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err)) return true;
-                LastImportError = err;
-                return false;
+                if (TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err)) return;
+                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportPlcTagTable failed");
+            }
+            catch (PortalException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                LastImportError = ex.ToString();
-                return false;
+                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
             }
         }
 
@@ -3284,9 +3281,8 @@ namespace TiaMcpServer.Siemens
                     var name = Path.GetFileNameWithoutExtension(file);
                     if (regex != null && !regex.IsMatch(name)) continue;
 
-                    var ok = ImportPlcTagTable(softwarePath, folderPath, file);
-                    if (ok) imported.Add(name);
-                    else failed.Add(new ImportFailure { Path = file, Error = LastImportError ?? "Import failed" });
+                    try { ImportPlcTagTable(softwarePath, folderPath, file); imported.Add(name); }
+                    catch (PortalException pex) { failed.Add(new ImportFailure { Path = file, Error = pex.Message }); }
                 }
 
                 return new ResponseImportBatch { Imported = imported, Failed = failed };
@@ -4036,13 +4032,12 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        public bool ImportTechnologyObject(string softwarePath, string folderPath, string importPath)
+        public void ImportTechnologyObject(string softwarePath, string folderPath, string importPath)
         {
-            LastImportError = null;
-            if (IsProjectNull()) return false;
+            if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
 
             var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return false;
+            if (plc == null) throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'");
 
             try
             {
@@ -4054,19 +4049,18 @@ namespace TiaMcpServer.Siemens
                           TryGetPropertyValue(root, "TechnologicalObjects", "TechnologyObjects", "Instances", "Objects");
 
                 if (col == null)
-                {
-                    LastImportError = $"TechnologyObjects collection not found. plcType={plc.GetType().FullName} groupType={group.GetType().FullName}";
-                    return false;
-                }
+                    throw new PortalException(PortalErrorCode.NotFound, $"TechnologyObjects collection not found. plcType={plc.GetType().FullName} groupType={group.GetType().FullName}");
 
-                if (TryImportEngineeringObjectIntoCollection(col, importPath, out _, out var err)) return true;
-                LastImportError = err;
-                return false;
+                if (TryImportEngineeringObjectIntoCollection(col, importPath, out _, out var err)) return;
+                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportTechnologyObject failed");
+            }
+            catch (PortalException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                LastImportError = ex.ToString();
-                return false;
+                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
             }
         }
 
@@ -4100,9 +4094,8 @@ namespace TiaMcpServer.Siemens
                     var name = Path.GetFileNameWithoutExtension(file);
                     if (regex != null && !regex.IsMatch(name)) continue;
 
-                    var ok = ImportTechnologyObject(softwarePath, folderPath, file);
-                    if (ok) imported.Add(name);
-                    else failed.Add(new ImportFailure { Path = file, Error = LastImportError ?? "Import failed" });
+                    try { ImportTechnologyObject(softwarePath, folderPath, file); imported.Add(name); }
+                    catch (PortalException pex) { failed.Add(new ImportFailure { Path = file, Error = pex.Message }); }
                 }
 
                 return new ResponseImportBatch { Imported = imported, Failed = failed };
@@ -7636,13 +7629,12 @@ namespace TiaMcpServer.Siemens
             return (exported, failed);
         }
 
-        public bool ImportHmiScreen(string softwarePath, string folderPath, string importPath)
+        public void ImportHmiScreen(string softwarePath, string folderPath, string importPath)
         {
-            LastImportError = null;
-            if (IsProjectNull()) return false;
+            if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
 
             var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) return false;
+            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
 
             try
             {
@@ -7664,33 +7656,29 @@ namespace TiaMcpServer.Siemens
                 }
 
                 if (screens == null)
-                {
-                    LastImportError = $"Screens collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}";
-                    return false;
-                }
+                    throw new PortalException(PortalErrorCode.NotFound, $"Screens collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}");
 
                 if (TryImportEngineeringObjectIntoCollection(screens, importPath, out _, out var err))
-                {
-                    return true;
-                }
+                    return;
 
-                LastImportError = err;
-                return false;
+                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportHmiScreen failed");
+            }
+            catch (PortalException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                LastImportError = ex.ToString();
-                return false;
+                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
             }
         }
 
-        public bool ImportHmiTagTable(string softwarePath, string folderPath, string importPath)
+        public void ImportHmiTagTable(string softwarePath, string folderPath, string importPath)
         {
-            LastImportError = null;
-            if (IsProjectNull()) return false;
+            if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
 
             var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) return false;
+            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
 
             try
             {
@@ -7707,56 +7695,49 @@ namespace TiaMcpServer.Siemens
                 }
 
                 if (tables == null)
-                {
-                    LastImportError = $"TagTables collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}";
-                    return false;
-                }
+                    throw new PortalException(PortalErrorCode.NotFound, $"TagTables collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}");
 
                 if (TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err))
-                {
-                    return true;
-                }
+                    return;
 
-                LastImportError = err;
-                return false;
+                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportHmiTagTable failed");
+            }
+            catch (PortalException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                LastImportError = ex.ToString();
-                return false;
+                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
             }
         }
 
-        public bool ImportHmiConnection(string softwarePath, string importPath)
+        public void ImportHmiConnection(string softwarePath, string importPath)
         {
-            LastImportError = null;
-            if (IsProjectNull()) return false;
+            if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
 
             var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) return false;
+            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
 
             try
             {
                 var sw = softwareContainer.Software;
                 var connections = TryGetPropertyValue(sw, "Connections");
                 if (connections == null)
-                {
-                    LastImportError = $"Connections collection not found. swType={sw.GetType().FullName}";
-                    return false;
-                }
+                    throw new PortalException(PortalErrorCode.NotFound, $"Connections collection not found. swType={sw.GetType().FullName}");
 
                 if (TryImportEngineeringObjectIntoCollection(connections, importPath, out _, out var err))
-                {
-                    return true;
-                }
+                    return;
 
-                LastImportError = err;
-                return false;
+                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportHmiConnection failed");
+            }
+            catch (PortalException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                LastImportError = ex.ToString();
-                return false;
+                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
             }
         }
 
@@ -7792,9 +7773,8 @@ namespace TiaMcpServer.Siemens
 
                     try
                     {
-                        var ok = ImportHmiScreen(softwarePath, folderPath, file);
-                        if (ok) imported.Add(name);
-                        else failed.Add(new ImportFailure { Path = file, Error = LastImportError ?? "Import failed" });
+                        ImportHmiScreen(softwarePath, folderPath, file);
+                        imported.Add(name);
                     }
                     catch (Exception ex)
                     {
@@ -7843,9 +7823,8 @@ namespace TiaMcpServer.Siemens
 
                     try
                     {
-                        var ok = ImportHmiTagTable(softwarePath, folderPath, file);
-                        if (ok) imported.Add(name);
-                        else failed.Add(new ImportFailure { Path = file, Error = LastImportError ?? "Import failed" });
+                        ImportHmiTagTable(softwarePath, folderPath, file);
+                        imported.Add(name);
                     }
                     catch (Exception ex)
                     {
@@ -10950,7 +10929,6 @@ namespace TiaMcpServer.Siemens
         public bool ImportBlock(string softwarePath, string groupPath, string importPath)
         {
             _logger?.LogInformation($"Importing block from path: {importPath}");
-            LastImportError = null;
 
             try
             {
@@ -10988,7 +10966,6 @@ namespace TiaMcpServer.Siemens
                 pex.Data["softwarePath"] = softwarePath;
                 pex.Data["groupPath"] = groupPath;
                 pex.Data["importPath"] = importPath;
-                LastImportError = pex.Message;
                 _logger?.LogError(pex, "ImportBlock failed for {SoftwarePath} group={GroupPath} file={ImportPath}: {Inner}", softwarePath, groupPath, importPath, inner);
                 throw pex;
             }
@@ -11111,7 +11088,6 @@ namespace TiaMcpServer.Siemens
         public bool ImportType(string softwarePath, string groupPath, string importPath)
         {
             _logger?.LogInformation($"Importing type from path: {importPath}");
-            LastImportError = null;
 
             try
             {
@@ -11146,7 +11122,6 @@ namespace TiaMcpServer.Siemens
                 pex.Data["softwarePath"] = softwarePath;
                 pex.Data["groupPath"] = groupPath;
                 pex.Data["importPath"] = importPath;
-                LastImportError = pex.Message;
                 _logger?.LogError(pex, "ImportType failed for {SoftwarePath} group={GroupPath} file={ImportPath}", softwarePath, groupPath, importPath);
                 throw pex;
             }

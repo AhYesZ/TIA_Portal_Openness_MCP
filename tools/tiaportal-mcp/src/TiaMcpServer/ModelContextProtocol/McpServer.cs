@@ -2466,18 +2466,18 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (classifiedKind == "type")
             {
-                if (Portal.ImportType(softwarePath, typeGroupPath, xmlPath)) importedTypes.Add(classifiedObjectName);
-                else failed.Add(new ImportFailure { Path = xmlPath, Error = Portal.LastImportError ?? "ImportType failed" });
+                try { Portal.ImportType(softwarePath, typeGroupPath, xmlPath); importedTypes.Add(classifiedObjectName); }
+                catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else if (classifiedKind == "tagtable")
             {
-                if (Portal.ImportPlcTagTable(softwarePath, tagFolderPath, xmlPath)) importedTagTables.Add(classifiedObjectName);
-                else failed.Add(new ImportFailure { Path = xmlPath, Error = Portal.LastImportError ?? "ImportPlcTagTable failed" });
+                try { Portal.ImportPlcTagTable(softwarePath, tagFolderPath, xmlPath); importedTagTables.Add(classifiedObjectName); }
+                catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else if (classifiedKind == "block")
             {
-                if (Portal.ImportBlock(softwarePath, blockGroupPath, xmlPath)) importedBlocks.Add(classifiedObjectName);
-                else failed.Add(new ImportFailure { Path = xmlPath, Error = Portal.LastImportError ?? "ImportBlock failed" });
+                try { Portal.ImportBlock(softwarePath, blockGroupPath, xmlPath); importedBlocks.Add(classifiedObjectName); }
+                catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else
             {
@@ -3804,17 +3804,16 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var ok = Portal.ImportHmiScreen(softwarePath, folderPath, importPath);
-                if (ok)
+                Portal.ImportHmiScreen(softwarePath, folderPath, importPath);
+                return new ResponseMessage
                 {
-                    return new ResponseMessage
-                    {
-                        Message = $"HMI screen imported from '{importPath}'",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
-                    };
-                }
-
-                throw new McpException($"Failed importing HMI screen from '{importPath}'. LastError: {Portal.LastImportError}", McpErrorCode.InternalError);
+                    Message = $"HMI screen imported from '{importPath}'",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException($"Failed importing HMI screen from '{importPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -3830,17 +3829,16 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var ok = Portal.ImportHmiTagTable(softwarePath, folderPath, importPath);
-                if (ok)
+                Portal.ImportHmiTagTable(softwarePath, folderPath, importPath);
+                return new ResponseMessage
                 {
-                    return new ResponseMessage
-                    {
-                        Message = $"HMI tag table imported from '{importPath}'",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
-                    };
-                }
-
-                throw new McpException($"Failed importing HMI tag table from '{importPath}'. LastError: {Portal.LastImportError}", McpErrorCode.InternalError);
+                    Message = $"HMI tag table imported from '{importPath}'",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException($"Failed importing HMI tag table from '{importPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -3855,17 +3853,16 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var ok = Portal.ImportHmiConnection(softwarePath, importPath);
-                if (ok)
+                Portal.ImportHmiConnection(softwarePath, importPath);
+                return new ResponseMessage
                 {
-                    return new ResponseMessage
-                    {
-                        Message = $"HMI connection imported from '{importPath}'",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
-                    };
-                }
-
-                throw new McpException($"Failed importing HMI connection from '{importPath}'. LastError: {Portal.LastImportError}", McpErrorCode.InternalError);
+                    Message = $"HMI connection imported from '{importPath}'",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException($"Failed importing HMI connection from '{importPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -4036,17 +4033,16 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var ok = Portal.ImportPlcTagTable(softwarePath, folderPath, importPath);
-                if (ok)
+                Portal.ImportPlcTagTable(softwarePath, folderPath, importPath);
+                return new ResponseMessage
                 {
-                    return new ResponseMessage
-                    {
-                        Message = $"PLC tag table imported from '{importPath}'",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
-                    };
-                }
-
-                throw new McpException($"Failed importing PLC tag table from '{importPath}'. LastError: {Portal.LastImportError}", McpErrorCode.InternalError);
+                    Message = $"PLC tag table imported from '{importPath}'",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException($"Failed importing PLC tag table from '{importPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -4829,17 +4825,16 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var ok = Portal.ImportTechnologyObject(softwarePath, folderPath, importPath);
-                if (ok)
+                Portal.ImportTechnologyObject(softwarePath, folderPath, importPath);
+                return new ResponseMessage
                 {
-                    return new ResponseMessage
-                    {
-                        Message = $"Technology object imported from '{importPath}'",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
-                    };
-                }
-
-                throw new McpException($"Failed importing technology object from '{importPath}'. LastError: {Portal.LastImportError}", McpErrorCode.InternalError);
+                    Message = $"Technology object imported from '{importPath}'",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException($"Failed importing technology object from '{importPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -5962,39 +5957,42 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var item in files.Where(x => x.Kind == "type").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase))
                 {
                     if (stopOnImportFailure && failed.Any()) break;
-                    if (Portal.ImportType(softwarePath, typeGroupPath, item.File))
+                    try
                     {
+                        Portal.ImportType(softwarePath, typeGroupPath, item.File);
                         importedTypes.Add(item.ObjectName);
                     }
-                    else
+                    catch (PortalException pex)
                     {
-                        failed.Add(new ImportFailure { Path = item.File, Error = Portal.LastImportError ?? "ImportType failed" });
+                        failed.Add(new ImportFailure { Path = item.File, Error = pex.Message });
                     }
                 }
 
                 foreach (var item in files.Where(x => x.Kind == "tagtable").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase))
                 {
                     if (stopOnImportFailure && failed.Any()) break;
-                    if (Portal.ImportPlcTagTable(softwarePath, tagFolderPath, item.File))
+                    try
                     {
+                        Portal.ImportPlcTagTable(softwarePath, tagFolderPath, item.File);
                         importedTagTables.Add(item.ObjectName);
                     }
-                    else
+                    catch (PortalException pex)
                     {
-                        failed.Add(new ImportFailure { Path = item.File, Error = Portal.LastImportError ?? "ImportPlcTagTable failed" });
+                        failed.Add(new ImportFailure { Path = item.File, Error = pex.Message });
                     }
                 }
 
                 foreach (var item in files.Where(x => x.Kind == "technology").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase))
                 {
                     if (stopOnImportFailure && failed.Any()) break;
-                    if (Portal.ImportTechnologyObject(softwarePath, technologyFolderPath, item.File))
+                    try
                     {
+                        Portal.ImportTechnologyObject(softwarePath, technologyFolderPath, item.File);
                         importedTechnologyObjects.Add(item.ObjectName);
                     }
-                    else
+                    catch (PortalException pex)
                     {
-                        failed.Add(new ImportFailure { Path = item.File, Error = Portal.LastImportError ?? "ImportTechnologyObject failed" });
+                        failed.Add(new ImportFailure { Path = item.File, Error = pex.Message });
                     }
                 }
 
@@ -6003,13 +6001,14 @@ namespace TiaMcpServer.ModelContextProtocol
                                           .ThenBy(x => x.File, StringComparer.OrdinalIgnoreCase))
                 {
                     if (stopOnImportFailure && failed.Any()) break;
-                    if (Portal.ImportBlock(softwarePath, blockGroupPath, item.File))
+                    try
                     {
+                        Portal.ImportBlock(softwarePath, blockGroupPath, item.File);
                         importedBlocks.Add(item.ObjectName);
                     }
-                    else
+                    catch (PortalException pex)
                     {
-                        failed.Add(new ImportFailure { Path = item.File, Error = Portal.LastImportError ?? "ImportBlock failed" });
+                        failed.Add(new ImportFailure { Path = item.File, Error = pex.Message });
                     }
                 }
 
@@ -6113,14 +6112,11 @@ namespace TiaMcpServer.ModelContextProtocol
             var suggestions = new List<string>();
             try
             {
-                var imported = Portal.ImportBlock(softwarePath, groupPath, importPath);
-                if (!imported && !string.IsNullOrWhiteSpace(Portal.LastImportError))
-                {
-                    suggestions.Add("If groupPath is wrong, retry with empty groupPath for root Program blocks.");
-                }
+                // ImportBlock 现以 PortalException 报失败；成功即已导入
+                Portal.ImportBlock(softwarePath, groupPath, importPath);
 
                 ResponseCompileDiagnose? compile = null;
-                if (compileAfter && imported)
+                if (compileAfter)
                 {
                     compile = CompileAndDiagnosePlc(softwarePath);
                     if (compile.Meta?["success"]?.GetValue<bool>() == false)
@@ -6132,12 +6128,26 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 return new ResponseRepairAndCompile
                 {
-                    Message = imported ? "Imported (best-effort) and compiled." : "Import failed.",
-                    Imported = imported,
-                    ImportError = imported ? null : Portal.LastImportError,
+                    Message = "Imported (best-effort) and compiled.",
+                    Imported = true,
+                    ImportError = null,
                     Compile = compile,
                     Suggestions = suggestions,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = imported && (compile == null || (compile.Meta?["success"]?.GetValue<bool>() ?? false)) }
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = compile == null || (compile.Meta?["success"]?.GetValue<bool>() ?? false) }
+                };
+            }
+            catch (PortalException pex)
+            {
+                // 导入失败：返回诊断而非抛出（本工具契约是给出修复建议）
+                suggestions.Add("If groupPath is wrong, retry with empty groupPath for root Program blocks.");
+                return new ResponseRepairAndCompile
+                {
+                    Message = "Import failed.",
+                    Imported = false,
+                    ImportError = $"[{pex.Code}] {pex.Message}",
+                    Compile = null,
+                    Suggestions = suggestions,
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false }
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -6639,22 +6649,20 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                if (Portal.ImportType(softwarePath, groupPath, importPath))
+                Portal.ImportType(softwarePath, groupPath, importPath);
+                return new ResponseImportType
                 {
-                    return new ResponseImportType
+                    Message = $"Type imported from '{importPath}' to '{groupPath}'",
+                    Meta = new JsonObject
                     {
-                        Message = $"Type imported from '{importPath}' to '{groupPath}'",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
-                    };
-                }
-                else
-                {
-                    throw new McpException($"Failed importing type from '{importPath}' to '{groupPath}'", McpErrorCode.InternalError);
-                }
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true
+                    }
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException($"Failed importing type from '{importPath}' to '{groupPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
