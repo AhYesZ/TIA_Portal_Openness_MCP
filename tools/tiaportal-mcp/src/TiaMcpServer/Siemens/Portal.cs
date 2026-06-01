@@ -43,6 +43,11 @@ namespace TiaMcpServer.Siemens
         private TiaPortal? _portal;
         private ProjectBase? _project;
         private LocalSession? _session;
+        // Resolving a softwarePath walks the device tree via Openness (~40 COM calls per call). Cache it per
+        // open project; ReferenceEquals(_project) auto-invalidates on any project open/close/create/attach
+        // without a COM call. Device adds only introduce new paths (cache misses); there is no delete-device tool.
+        private readonly Dictionary<string, SoftwareContainer> _softwareContainerCache = new Dictionary<string, SoftwareContainer>(StringComparer.OrdinalIgnoreCase);
+        private ProjectBase? _softwareCacheProject;
         private readonly ILogger<Portal>? _logger;
         public string? LastConnectError { get; private set; }
 
@@ -12308,6 +12313,35 @@ namespace TiaMcpServer.Siemens
         }
 
         private SoftwareContainer? GetSoftwareContainer(string softwarePath)
+        {
+            if (_project == null)
+            {
+                if (_softwareCacheProject != null) { _softwareContainerCache.Clear(); _softwareCacheProject = null; }
+                return null;
+            }
+
+            // Invalidate cached resolutions whenever the open project instance changes
+            // (open/close/create/attach all reassign _project). Free check, no COM call.
+            if (!ReferenceEquals(_project, _softwareCacheProject))
+            {
+                _softwareContainerCache.Clear();
+                _softwareCacheProject = _project;
+            }
+
+            if (_softwareContainerCache.TryGetValue(softwarePath, out var cached))
+            {
+                return cached;
+            }
+
+            var resolved = ResolveSoftwareContainerUncached(softwarePath);
+            if (resolved != null)
+            {
+                _softwareContainerCache[softwarePath] = resolved;
+            }
+            return resolved;
+        }
+
+        private SoftwareContainer? ResolveSoftwareContainerUncached(string softwarePath)
         {
             if (_project == null)
             {

@@ -30,6 +30,11 @@
 - `FB_TimerCounterDemo.scl`：`Counter` 是 S7-SCL 保留字，作静态变量名导致外部源生成失败 → 改名 `CountAccum`；S7-1200 多重背景 `TON` 经外部源导入后编译报 IN/PT 形参无效 → 暂移除定时器，`DelayedDone` 以 `Enable` 驱动并加注释。
 - `EnsureUnifiedHmiButtonAction` / `EnsureUnifiedHmiButtonEventHandler` 的 `eventType` 参数描述错写 `Pressed`/`Released`/`Click`/`Press`/`Release`（`HmiButtonEventType` 枚举里都不存在，实际为 `None/Activated/Deactivated/Tapped/KeyDown/KeyUp/Down/Up/ContextTapped`）→ 改为正确示例 `Down`/`Up`/`Tapped`，避免按钮动作 SetScriptCode 失败。
 
+### 性能 — 缓存 softwarePath 解析，减少每次 HMI/PLC 调用的 Openness 往返
+
+- `Portal.GetSoftwareContainer` 原先每次调用都遍历整棵设备树（`_project.Devices` + 组），对每个 DeviceItem 调 `GetService<SoftwareContainer>`（PLC_1 一个设备就 ~30 个 item），约 40 次 COM 往返/次；批量建 15 个 HMI 标签/画面/按钮动作时被重复 N 次（实测每次工具调用约 2s，且 TIA Openness 单线程串行）。
+- 新增按 `softwarePath` 缓存解析结果，用 `ReferenceEquals(_project)` 自动失效（项目 open/close/create/attach 都会重建 `_project`，零 COM 开销）；加设备只引入新路径=缓存未命中，无 delete-device 工具，故不会过期。解析逻辑不变，仅加快路径返回同一对象。
+
 ## [0.0.37] - 2026-05-31
 
 ### 错误处理统一（E）— 消除 LastXxxError 侧信道，统一为 PortalException
