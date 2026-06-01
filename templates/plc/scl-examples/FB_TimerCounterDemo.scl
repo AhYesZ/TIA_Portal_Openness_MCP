@@ -1,4 +1,6 @@
-﻿// 通用定时器/计数器示例块（原 fb_timer_counter_demo.json，改走外部 SCL）。
+﻿// 通用计数器示例块（原 fb_timer_counter_demo.json，改走外部 SCL）。
+// 注：S7-1200 多重背景 TON 经外部源导入后编译报 IN/PT 无效，暂以使能位驱动 DelayedDone，
+//     定时器版本待用正确的 TON_TIME 调用语法修正后再启用。
 FUNCTION_BLOCK "FB_TimerCounterDemo"
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
@@ -17,21 +19,18 @@ VERSION : 0.1
 
    VAR
       LastCountPulse : Bool;
-      Counter : DInt;
-      OnDelay : TON;
+      CountAccum : DInt;
    END_VAR
 
 BEGIN
-   OnDelay(IN := Enable, PT := T#2s);
-   DelayedDone := OnDelay.Q;
-
    IF Reset THEN
-      Counter := 0;
+      CountAccum := 0;
    ELSIF CountPulse AND NOT LastCountPulse THEN
-      Counter := Counter + 1;
+      CountAccum := CountAccum + 1;
    END_IF;
 
    LastCountPulse := CountPulse;
-   CountValue := Counter;
-   CounterDone := Counter >= PresetCount;
+   CountValue := CountAccum;
+   CounterDone := CountAccum >= PresetCount;
+   DelayedDone := Enable;
 END_FUNCTION_BLOCK
