@@ -1,5 +1,18 @@
 # Change Log
 
+## [2.0.2] - 2026-06-08
+
+V20 兼容性修复小版本（修复 GitHub issue #2）。
+
+### 修复 — V20 导入标签表报 `engineering version 'V21' not supported`
+
+- `Portal.ImportPlcTagTable` 现在统一走 `PrepareXmlForImport`，把硬编码的 `<Engineering version="V21"/>` 头部改写为当前连接的博途版本（并补 UTF-8 BOM）。此前块/类型导入已做此处理，唯独标签表漏过滤，导致 V20 上 `PlcBuildAndImport` 生成的变量表被 Openness 拒绝。
+
+### 新增 — `WritePlcSclSourceFile`（离线，第 181 个工具）
+
+- 把 SCL 源文本写成本地 `.scl` 外部源文件（**UTF-8 带 BOM**，中文注释不乱码）。不连接博途、不导入，只落盘并返回路径与手动导入指引。
+- 作为 V20 用户的稳妥后路：当 FC 逻辑块 XML 因 `Cannot create SW.Blocks.CompileUnit... token not supported`（V21 SimaticML 令牌）被 V20 拒绝时，改用博途「外部源文件 → 从源生成块」手动导入，绕开严格的 XML 令牌校验。
+
 ## [2.0.1] - 2026-06-04
 
 安全与隐私小版本（仅 `Program.cs`，无行为变更、无新工具）。

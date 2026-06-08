@@ -5181,6 +5181,71 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "WritePlcSclSourceFile"), Description("[L1][PLC-Software][Offline] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake/乱码). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: 'Cannot create SW.Blocks.CompileUnit... token not supported'): the user imports the .scl manually in TIA via project tree → 'External source files' → 'Add new external file', then right-clicks the source → 'Generate blocks from source'. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK.")]
+        public static ResponseMessage WritePlcSclSourceFile(
+            [Description("sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim.")] string sclContent,
+            [Description("outputPath: target .scl file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.")] string outputPath = "")
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(sclContent))
+                    throw new McpException("sclContent is empty — provide the full SCL source text to write.", McpErrorCode.InvalidParams);
+
+                // Derive a default file name from the first block declaration in the source.
+                var nameMatch = Regex.Match(sclContent,
+                    "(?:FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|TYPE)\\s+\"?([A-Za-z_][A-Za-z0-9_]*)\"?",
+                    RegexOptions.IgnoreCase);
+                var defaultName = MakeSafeFileName(nameMatch.Success ? nameMatch.Groups[1].Value : "MCP_Source");
+
+                string finalPath;
+                if (string.IsNullOrWhiteSpace(outputPath))
+                {
+                    var dir = Path.Combine(Path.GetTempPath(), "tia_mcp_scl");
+                    finalPath = Path.Combine(dir, defaultName + ".scl");
+                }
+                else if (Directory.Exists(outputPath) ||
+                         outputPath.EndsWith("\\", StringComparison.Ordinal) ||
+                         outputPath.EndsWith("/", StringComparison.Ordinal))
+                {
+                    finalPath = Path.Combine(outputPath, defaultName + ".scl");
+                }
+                else
+                {
+                    finalPath = string.IsNullOrEmpty(Path.GetExtension(outputPath))
+                        ? outputPath + ".scl"
+                        : outputPath;
+                }
+
+                var parent = Path.GetDirectoryName(finalPath);
+                if (!string.IsNullOrEmpty(parent))
+                    Directory.CreateDirectory(parent);
+
+                // UTF-8 WITH BOM: TIA reads BOM-less UTF-8 SCL with Chinese comments as mojibake.
+                File.WriteAllText(finalPath, sclContent, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+
+                return new ResponseMessage
+                {
+                    Message =
+                        $"SCL source written to '{finalPath}'. To import in TIA Portal: project tree → " +
+                        "'External source files' → 'Add new external file' → select this .scl → " +
+                        "right-click the source → 'Generate blocks from source'. " +
+                        "(Or call ImportPlcExternalSource then GenerateBlocksFromExternalSource if connected.)",
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true,
+                        ["path"] = finalPath,
+                        ["blockName"] = nameMatch.Success ? nameMatch.Groups[1].Value : null,
+                        ["bytes"] = new System.IO.FileInfo(finalPath).Length
+                    }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error writing SCL source file: {ex.Message}", ex, McpErrorCode.InternalError);
+            }
+        }
+
         [McpServerTool(Name = "ImportPlcExternalSource"), Description("[L2][PLC-Software]Import one PLC external source file into a group (best-effort)")]
         public static ResponseMessage ImportPlcExternalSource(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,

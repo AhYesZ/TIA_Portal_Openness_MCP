@@ -2,7 +2,7 @@
     "package":  "TIA_MCP_交付包_20260512_151308",
     "generatedAt":  "2026-05-12T15:16:15",
     "source":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs",
-    "toolCount":  184,
+    "toolCount":  185,
     "note":  "Static snapshot generated from [McpServerTool] attributes. Runtime tools/list remains authoritative when server is running.",
     "tools":  [
                   {
@@ -1550,6 +1550,17 @@
 
                                      ],
                       "description":  "[L2][Category:PLC-OpcUA][PreCondition:Connect+OpenProject] Import an OPC UA server interface or reference namespace from an XML file. If an interface with the same name (derived from the file name) already exists, it is updated in place. Otherwise a new interface is created. Download to PLC after import to apply changes to the CPU. interfaceType: \u0027ServerInterface\u0027 (default), \u0027ReferenceNamespace\u0027."
+                  },
+                  {
+                      "name":  "WritePlcSclSourceFile",
+                      "layer":  "L1",
+                      "domain":  "PLC-Software",
+                      "method":  "WritePlcSclSourceFile",
+                      "returnType":  "ResponseMessage",
+                      "parameters":  [
+
+                                     ],
+                      "description":  "[L1][PLC-Software][Offline] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake). Does NOT connect to TIA Portal and does NOT import; returns the path plus manual-import instructions. Robust fallback when XML block import is rejected (e.g. a V20 portal rejecting V21 SimaticML tokens): import the .scl via 'External source files' then 'Generate blocks from source'."
                   },
                   {
                       "name":  "ImportPlcExternalSource",

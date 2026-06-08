@@ -3263,7 +3263,12 @@ namespace TiaMcpServer.Siemens
                 if (tables == null)
                     throw new PortalException(PortalErrorCode.NotFound, $"TagTables collection not found. plcType={plc.GetType().FullName} groupType={group.GetType().FullName}");
 
-                if (TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err)) return;
+                // Route through PrepareXmlForImport so the hardcoded <Engineering version="V21"/>
+                // header is rewritten to the connected portal version (and a UTF-8 BOM is ensured).
+                // Without this, tag-table imports fail on a V20 portal with
+                // "The engineering version 'V21' ... is not supported." (block/type imports already
+                // sanitize via PrepareXmlForImport; tag tables previously skipped it).
+                if (TryImportEngineeringObjectIntoCollection(tables, PrepareXmlForImport(importPath), out _, out var err)) return;
                 throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportPlcTagTable failed");
             }
             catch (PortalException)
