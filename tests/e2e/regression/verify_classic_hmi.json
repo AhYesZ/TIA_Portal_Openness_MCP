@@ -1,0 +1,79 @@
+﻿[
+    {
+        "category":  "L1-Portal",
+        "tool":  "Connect",
+        "status":  "pass",
+        "elapsedMs":  1010,
+        "detail":  "{\"message\":\"Connected to TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:45:54.1588214+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProject",
+        "status":  "pass",
+        "elapsedMs":  86,
+        "detail":  "{\"items\":[{\"name\":\"\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\",\"attributes\":[{\"name\":\"Author\",\"value\":\"XL626\",\"accessMode\":\"Read\"},{\"name\":\"Copyright\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"CreationTime\",\"value\":\"2026-01-26T08:25:42.4773471Z\",\"accessMode\":\"Read\"},{\"name\":\"Family\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"IsModified\",\"value\":false,\"accessMode\":\"Read\"},{\"nam"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "AttachToOpenProject",
+        "status":  "pass",
+        "elapsedMs":  33,
+        "detail":  "{\"message\":\"Attached to open project \\u0027\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:45:54.4142138+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "GetHmiProgramInfo",
+        "status":  "pass",
+        "elapsedMs":  297,
+        "detail":  "{\"name\":\"HMI_RT_1\",\"programType\":\"Unified\",\"screens\":[\"\\u753B\\u9762_1\"],\"message\":\"HMI program info retrieved from \\u0027HMI_RT_1\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:45:54.7142195+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "WriteClassicHmiMinimalPackageFiles",
+        "status":  "pass",
+        "elapsedMs":  93,
+        "detail":  "{\"ok\":true,\"data\":{\"format\":\"tia-classic-hmi-minimal-package-files-v1\",\"timestamp\":\"2026-05-11T11:45:54.7964261\\u002B08:00\",\"offlineOnly\":true,\"packageName\":\"MCPVerify_HmiPackage\",\"ok\":true,\"outputDirectory\":\"C:\\\\Users\\\\XL626\\\\Desktop\\\\testtia\\\\hmi_classic_verify\",\"tagTableXmlPath\":\"C:\\\\Users\\\\XL626\\\\Desktop\\\\testtia\\\\hmi_classic_verify\\\\MCPVerify_HmiPackage_TagTable.xml\",\"scre"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "ImportHmiTagTable(MCPVerify_HmiTags)",
+        "status":  "fail",
+        "elapsedMs":  58,
+        "detail":  "tool-error: An error occurred invoking \u0027ImportHmiTagTable\u0027: Failed importing HMI tag table from \u0027C:\\Users\\XL626\\Desktop\\testtia\\hmi_classic_verify\\MCPVerify_HmiPackage_TagTable.xml\u0027. LastError: No Import method found on collection type Siemens.Engineering.HmiUnified.HmiTags.HmiTagTableComposition"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "ImportHmiScreen(MCPVerify_MainScreen)",
+        "status":  "fail",
+        "elapsedMs":  59,
+        "detail":  "tool-error: An error occurred invoking \u0027ImportHmiScreen\u0027: Failed importing HMI screen from \u0027C:\\Users\\XL626\\Desktop\\testtia\\hmi_classic_verify\\MCPVerify_HmiPackage_Screen.xml\u0027. LastError: No Import method found on collection type Siemens.Engineering.HmiUnified.UI.Screens.HmiScreenComposition"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "GetHmiScreens(post-import)",
+        "status":  "pass",
+        "elapsedMs":  69,
+        "detail":  "{\"items\":[\"\\u753B\\u9762_1\"],\"message\":\"HMI screens listed for \\u0027HMI_RT_1\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:45:55.0623438+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "CompileSoftware(HMI_RT_1)",
+        "status":  "fail",
+        "elapsedMs":  51,
+        "detail":  "tool-error: An error occurred invoking \u0027CompileSoftware\u0027: Failed compiling software \u0027HMI_RT_1\u0027: Software at \u0027HMI_RT_1\u0027 is not PlcSoftware. Type=Siemens.Engineering.HmiUnified.HmiSoftware"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "SaveProject",
+        "status":  "pass",
+        "elapsedMs":  21,
+        "detail":  "{\"message\":\"Local project saved\",\"meta\":{\"timestamp\":\"2026-05-11T11:45:55.1446376+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Portal",
+        "tool":  "Disconnect",
+        "status":  "pass",
+        "elapsedMs":  37,
+        "detail":  "{\"message\":\"Disconnected from TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:45:55.1837857+08:00\",\"success\":true}}"
+    }
+]

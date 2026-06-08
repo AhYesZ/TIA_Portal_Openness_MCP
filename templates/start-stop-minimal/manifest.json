@@ -1,0 +1,12 @@
+{
+  "name": "start-stop-minimal",
+  "plcBlocksDir": "plc/blocks",
+  "plcTypesDir": "plc/types",
+  "hmiScreensDir": "hmi/screens",
+  "hmiTagTablesDir": "hmi/tags",
+  "plcBlockGroupPath": "",
+  "plcTypeGroupPath": "",
+  "hmiScreenFolderPath": "",
+  "hmiTagTableFolderPath": ""
+}
+

@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V21" />
+  <DocumentInfo>
+    <Created>2000-01-01T00:00:00.0000000Z</Created>
+    <ExportSetting>None</ExportSetting>
+    <InstalledProducts />
+  </DocumentInfo>
+  <SW.Blocks.OB ID="0">
+    <AttributeList>
+      <Interface>
+        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+          <Section Name="Input">
+            <Member Name="Initial_Call" Datatype="Bool" Informative="true" />
+            <Member Name="Remanence" Datatype="Bool" Informative="true" />
+          </Section>
+          <Section Name="Temp" />
+          <Section Name="Constant" />
+        </Sections>
+      </Interface>
+      <MemoryLayout>Optimized</MemoryLayout>
+      <Name>Cyclic_Main</Name>
+      <Namespace />
+      <Number>200</Number>
+      <ProgrammingLanguage>SCL</ProgrammingLanguage>
+      <SecondaryType>ProgramCycle</SecondaryType>
+      <SetENOAutomatically>false</SetENOAutomatically>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>zh-CN</Culture>
+              <Text>主程序循环 OB1（梯形图）。每个扫描周期调用一次 FC_StartStop 处理起保停逻辑。</Text>
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <SW.Blocks.CompileUnit ID="3" CompositionName="CompileUnits">
+        <AttributeList>
+          <NetworkSource>
+            <StructuredText xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4">
+              <Access Scope="Call" UId="21">
+                <CallInfo UId="22" BlockType="FC">
+                  <Instance Scope="GlobalVariable" UId="24">
+                    <Component Name="FC_StartStop" UId="23" />
+                  </Instance>
+                  <Token Text="(" UId="25" />
+                  <Token Text=")" UId="26" />
+                </CallInfo>
+              </Access>
+              <Token Text=";" UId="27" />
+              <NewLine UId="28" />
+            </StructuredText>
+          </NetworkSource>
+          <ProgrammingLanguage>SCL</ProgrammingLanguage>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText ID="4" CompositionName="Comment">
+            <ObjectList>
+              <MultilingualTextItem ID="5" CompositionName="Items">
+                <AttributeList>
+                  <Culture>zh-CN</Culture>
+                  <Text>调用起保停功能：FC_StartStop 内部读 I_Start/I_Stop/I_EStop，写 Q_Run</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+          <MultilingualText ID="6" CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem ID="7" CompositionName="Items">
+                <AttributeList>
+                  <Culture>zh-CN</Culture>
+                  <Text>调用起保停 FC</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+    </ObjectList>
+  </SW.Blocks.OB>
+</Document>

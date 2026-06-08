@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V21" />
+  <DocumentInfo>
+    <Created>2000-01-01T00:00:00.0000000Z</Created>
+    <ExportSetting>WithDefaults</ExportSetting>
+    <InstalledProducts />
+  </DocumentInfo>
+  <Hmi.Tag.TagTable ID="0">
+    <AttributeList>
+      <Name>默认变量表</Name>
+    </AttributeList>
+    <ObjectList>
+      <Hmi.Tag.Tag ID="1" CompositionName="Tags">
+        <AttributeList>
+          <AcquisitionTriggerMode>Visible</AcquisitionTriggerMode>
+          <AddressAccessMode>Symbolic</AddressAccessMode>
+          <Coding>Binary</Coding>
+          <ConfirmationType>None</ConfirmationType>
+          <GmpRelevant>false</GmpRelevant>
+          <JobNumber>0</JobNumber>
+          <Length>1</Length>
+          <LinearScaling>false</LinearScaling>
+          <LogicalAddress />
+          <MandatoryCommenting>false</MandatoryCommenting>
+          <Name>HMI_Start</Name>
+          <Persistency>false</Persistency>
+          <QualityCode>false</QualityCode>
+          <ScalingHmiHigh>100</ScalingHmiHigh>
+          <ScalingHmiLow>0</ScalingHmiLow>
+          <ScalingPlcHigh>10</ScalingPlcHigh>
+          <ScalingPlcLow>0</ScalingPlcLow>
+          <StartValue />
+          <SubstituteValue />
+          <SubstituteValueUsage>None</SubstituteValueUsage>
+          <Synchronization>false</Synchronization>
+          <UpdateMode>ProjectWide</UpdateMode>
+          <UseMultiplexing>false</UseMultiplexing>
+        </AttributeList>
+        <LinkList>
+          <AcquisitionCycle TargetID="@OpenLink"><Name>100 ms</Name></AcquisitionCycle>
+          <Connection TargetID="@OpenLink"><Name>HMI_Connection_1</Name></Connection>
+          <ControllerTag TargetID="@OpenLink"><Name>I_Start</Name></ControllerTag>
+          <DataType TargetID="@OpenLink"><Name>Bool</Name></DataType>
+          <HmiDataType TargetID="@OpenLink"><Name>Bool</Name></HmiDataType>
+        </LinkList>
+      </Hmi.Tag.Tag>
+      <Hmi.Tag.Tag ID="2" CompositionName="Tags">
+        <AttributeList>
+          <AcquisitionTriggerMode>Visible</AcquisitionTriggerMode>
+          <AddressAccessMode>Symbolic</AddressAccessMode>
+          <Coding>Binary</Coding>
+          <ConfirmationType>None</ConfirmationType>
+          <GmpRelevant>false</GmpRelevant>
+          <JobNumber>0</JobNumber>
+          <Length>1</Length>
+          <LinearScaling>false</LinearScaling>
+          <LogicalAddress />
+          <MandatoryCommenting>false</MandatoryCommenting>
+          <Name>HMI_Stop</Name>
+          <Persistency>false</Persistency>
+          <QualityCode>false</QualityCode>
+          <ScalingHmiHigh>100</ScalingHmiHigh>
+          <ScalingHmiLow>0</ScalingHmiLow>
+          <ScalingPlcHigh>10</ScalingPlcHigh>
+          <ScalingPlcLow>0</ScalingPlcLow>
+          <StartValue />
+          <SubstituteValue />
+          <SubstituteValueUsage>None</SubstituteValueUsage>
+          <Synchronization>false</Synchronization>
+          <UpdateMode>ProjectWide</UpdateMode>
+          <UseMultiplexing>false</UseMultiplexing>
+        </AttributeList>
+        <LinkList>
+          <AcquisitionCycle TargetID="@OpenLink"><Name>100 ms</Name></AcquisitionCycle>
+          <Connection TargetID="@OpenLink"><Name>HMI_Connection_1</Name></Connection>
+          <ControllerTag TargetID="@OpenLink"><Name>I_Stop</Name></ControllerTag>
+          <DataType TargetID="@OpenLink"><Name>Bool</Name></DataType>
+          <HmiDataType TargetID="@OpenLink"><Name>Bool</Name></HmiDataType>
+        </LinkList>
+      </Hmi.Tag.Tag>
+      <Hmi.Tag.Tag ID="3" CompositionName="Tags">
+        <AttributeList>
+          <AcquisitionTriggerMode>Visible</AcquisitionTriggerMode>
+          <AddressAccessMode>Symbolic</AddressAccessMode>
+          <Coding>Binary</Coding>
+          <ConfirmationType>None</ConfirmationType>
+          <GmpRelevant>false</GmpRelevant>
+          <JobNumber>0</JobNumber>
+          <Length>1</Length>
+          <LinearScaling>false</LinearScaling>
+          <LogicalAddress />
+          <MandatoryCommenting>false</MandatoryCommenting>
+          <Name>HMI_Run</Name>
+          <Persistency>false</Persistency>
+          <QualityCode>false</QualityCode>
+          <ScalingHmiHigh>100</ScalingHmiHigh>
+          <ScalingHmiLow>0</ScalingHmiLow>
+          <ScalingPlcHigh>10</ScalingPlcHigh>
+          <ScalingPlcLow>0</ScalingPlcLow>
+          <StartValue />
+          <SubstituteValue />
+          <SubstituteValueUsage>None</SubstituteValueUsage>
+          <Synchronization>false</Synchronization>
+          <UpdateMode>ProjectWide</UpdateMode>
+          <UseMultiplexing>false</UseMultiplexing>
+        </AttributeList>
+        <LinkList>
+          <AcquisitionCycle TargetID="@OpenLink"><Name>100 ms</Name></AcquisitionCycle>
+          <Connection TargetID="@OpenLink"><Name>HMI_Connection_1</Name></Connection>
+          <ControllerTag TargetID="@OpenLink"><Name>Q_Run</Name></ControllerTag>
+          <DataType TargetID="@OpenLink"><Name>Bool</Name></DataType>
+          <HmiDataType TargetID="@OpenLink"><Name>Bool</Name></HmiDataType>
+        </LinkList>
+      </Hmi.Tag.Tag>
+    </ObjectList>
+  </Hmi.Tag.TagTable>
+</Document>

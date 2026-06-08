@@ -1,0 +1,28 @@
+﻿# Cold-start Unified PLC↔HMI Link Verification
+
+Run: 2026-05-11 17:25:56
+ProjectDir: C:\Users\XL626\Desktop\testtia\mcp-cold-unified-link_20260511_172501
+PASS: 20 / 20  FAIL: 0
+
+| Layer | Tool | Time(ms) | Status & Detail |
+|---|---|---:|---|
+| L1-Portal | `Connect` | 19253 | PASS: {"message":"Connected to TIA-Portal","meta":{"timestamp":"2026-05-11T17:25:23.991363+08:00","success":true}} |
+| L1-Project | `CreateProject(MCP_Cold_Unified_Link_20260511_172501)` | 8124 | PASS: {"message":"Project \u0027MCP_Cold_Unified_Link_20260511_172501\u0027 created in \u0027C:\\Users\\XL626\\Desktop\\testtia\\mcp-cold-unified-link_20260511_172501\u0027","meta":{"timestamp":"2026-05-11T17:25:32.3055884+08: |
+| L1-HW | `AddDevice PLC_1 (S7-1200 1211C V4.7)` | 5863 | PASS: {"ok":true,"deviceName":"PLC_1","family":"S7-1200","mlfbUsed":"6ES7211-1BE40-0XB0","versionUsed":"V4.7","attempts":["6ES7211-1BE40-0XB0 V4.7 -\u003E OK"],"message":"Device \u0027PLC_1\u0027 added (fallback)","meta":{"tim |
+| L1-HW | `AddDevice HMI_1 (WinCC Unified Comfort)` | 9047 | PASS: {"ok":true,"keyword":"WinCC Unified Comfort","deviceName":"HMI_1","preferredText":"","candidateUsed":{"source":"HardwareCatalog","keyword":"WinCC Unified Comfort","articleNumber":"6AV2 128-3GB06-0AXx","catalogPath":"Root |
+| L2-PLC | `PlcBuildAndImport(DB_MotorData)` | 1729 | PASS: {"dryRun":false,"buildKind":"globaldb","generatedDirectory":"C:\\Users\\XL626\\AppData\\Local\\Temp\\tia_mcp_plc_build_import_20260511_172547_266","writtenFiles":["C:\\Users\\XL626\\AppData\\Local\\Temp\\tia_mcp_plc_buil |
+| L2-HMI | `GetHmiProgramInfo(HMI_1)` | 52 | PASS: {"name":"HMI_RT_1","programType":"Unified","screens":[],"message":"HMI program info retrieved from \u0027HMI_1\u0027","meta":{"timestamp":"2026-05-11T17:25:49.012461+08:00","success":true}} |
+| L2-HMI | `EnsureUnifiedHmiConnection(HMI_Connection_1 -> PLC_1)` | 648 | PASS: {"objectKind":"HmiConnection","objectPath":"HMI_1:HMI_Connection_1","typeName":"Siemens.Engineering.HmiUnified.HmiConnections.HmiConnection","members":[{"name":"DriverProperties","kind":"Property","type":"Siemens.Enginee |
+| L2-HMI | `EnsureUnifiedHmiTagTable(MCP_LinkTags)` | 66 | PASS: {"message":"HMI tag table \u0027MCP_LinkTags\u0027 created.","meta":{"timestamp":"2026-05-11T17:25:49.6767265+08:00","tool":"EnsureUnifiedHmiTagTable","success":true,"action":"created","tagTableType":"Siemens.Engineering |
+| L2-HMI | `EnsureUnifiedHmiTag(StartCmd -> DB1.DBX0.0)` | 789 | PASS: {"message":"HMI tag \u0027StartCmd\u0027 created.","meta":{"timestamp":"2026-05-11T17:25:49.7493899+08:00","tool":"EnsureUnifiedHmiTag","success":true,"action":"created","tagType":"Siemens.Engineering.HmiUnified.HmiTags. |
+| L2-HMI | `EnsureUnifiedHmiTag(StopCmd -> DB1.DBX0.1)` | 504 | PASS: {"message":"HMI tag \u0027StopCmd\u0027 created.","meta":{"timestamp":"2026-05-11T17:25:50.5406337+08:00","tool":"EnsureUnifiedHmiTag","success":true,"action":"created","tagType":"Siemens.Engineering.HmiUnified.HmiTags.H |
+| L2-HMI | `EnsureUnifiedHmiTag(RunOut -> DB1.DBX0.2)` | 462 | PASS: {"message":"HMI tag \u0027RunOut\u0027 created.","meta":{"timestamp":"2026-05-11T17:25:51.0472976+08:00","tool":"EnsureUnifiedHmiTag","success":true,"action":"created","tagType":"Siemens.Engineering.HmiUnified.HmiTags.Hm |
+| L2-HMI | `EnsureUnifiedHmiScreen(MotorCtrl)` | 110 | PASS: {"message":"HMI screen \u0027MotorCtrl\u0027 created.","meta":{"timestamp":"2026-05-11T17:25:51.5167294+08:00","tool":"EnsureUnifiedHmiScreen","success":true,"action":"created","screenType":"Siemens.Engineering.HmiUnifie |
+| L2-HMI | `ApplyUnifiedHmiScreenDesignJson(MotorCtrl)` | 955 | PASS: {"message":"Applied Unified HMI design to \u0027MotorCtrl\u0027. changed=3, failed=0.","meta":{"timestamp":"2026-05-11T17:25:51.6245776+08:00","tool":"ApplyUnifiedHmiScreenDesignJson","success":true,"changed":["created:S |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StartBtn.Down set-bit StartCmd)` | 243 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"set-bit","event":"Down","targetTags":["StartCmd"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.SetBitInTag |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StartBtn.Up reset-bit StartCmd)` | 207 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"reset-bit","event":"Up","targetTags":["StartCmd"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.ResetBitInT |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StopBtn.Down set-bit StopCmd)` | 183 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"set-bit","event":"Down","targetTags":["StopCmd"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.SetBitInTag( |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StopBtn.Up reset-bit StopCmd)` | 190 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"reset-bit","event":"Up","targetTags":["StopCmd"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.ResetBitInTa |
+| L2-PLC | `CompileSoftware(PLC_1)` | 1191 | PASS: {"state":"Success","errorCount":0,"warningCount":0,"messages":["State=Success; Path=PLC_1","State=Success; Description=Compiling finished (errors: 0; warnings: 0)"],"message":"Software \u0027PLC_1\u0027 compiled. State=S |
+| L1-Project | `SaveProject` | 347 | PASS: {"message":"Local project saved","meta":{"timestamp":"2026-05-11T17:25:54.9671464+08:00","success":true}} |
+| L1-Portal | `Disconnect` | 73 | PASS: {"message":"Disconnected from TIA-Portal","meta":{"timestamp":"2026-05-11T17:25:55.0437829+08:00","success":true}} |

@@ -1,0 +1,128 @@
+﻿[
+    {
+        "category":  "L1-Portal",
+        "tool":  "Connect",
+        "status":  "pass",
+        "elapsedMs":  980,
+        "detail":  "{\"message\":\"Connected to TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:01:12.585505+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProject",
+        "status":  "pass",
+        "elapsedMs":  93,
+        "detail":  "{\"items\":[{\"name\":\"\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\",\"attributes\":[{\"name\":\"Author\",\"value\":\"XL626\",\"accessMode\":\"Read\"},{\"name\":\"Copyright\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"CreationTime\",\"value\":\"2"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "AttachToOpenProject",
+        "status":  "pass",
+        "elapsedMs":  64,
+        "detail":  "{\"message\":\"Attached to open project \\u0027\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:01:12.8315698+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProjectTree",
+        "status":  "pass",
+        "elapsedMs":  1335,
+        "detail":  "{\"tree\":\"\\u0060\\u0060\\u0060\\n\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\\r\\n\\u251C\\u2500\\u2500 Devices [Collection]\\r\\n\\u2502 \\u251C\\u2500\\u2500 S7-1500/ET200MP station_1 [Device: System:Device.S71500]\\r\\n\\u2502 \\"
+    },
+    {
+        "category":  "L1-Hardware",
+        "tool":  "GetDevices",
+        "status":  "pass",
+        "elapsedMs":  77,
+        "detail":  "{\"items\":[{\"name\":\"S7-1500/ET200MP station_1\",\"description\":\"Siemens.Engineering.HW.DeviceImpl\",\"attributes\":[{\"name\":\"Author\",\"value\":\"XL626\",\"accessMode\":\"ReadWrite\"},{\"name\":\"Comment\",\"value\":\"\",\"accessMode\":\"ReadWrit"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "GetSoftwareInfo",
+        "status":  "pass",
+        "elapsedMs":  304,
+        "detail":  "{\"name\":\"\\u5B89\\u5168PLC\",\"description\":\"Siemens.Engineering.SW.PlcSoftware\",\"attributes\":[{\"name\":\"Name\",\"value\":\"\\u5B89\\u5168PLC\",\"accessMode\":\"Read\"}],\"message\":\"Software info retrieved from \\u0027\\u5B89\\u5168PLC\\u002"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "GetSoftwareTree",
+        "status":  "pass",
+        "elapsedMs":  326,
+        "detail":  "{\"tree\":\"\\u0060\\u0060\\u0060\\n\\u5B89\\u5168PLC [PLC Software]\\r\\n\\u251C\\u2500\\u2500 Program blocks\\r\\n\\u2502 \\u251C\\u2500\\u2500 Main [OB1, LAD]\\r\\n\\u2502 \\u251C\\u2500\\u2500 A1_DB4_GoundPLC [DB34, DB]\\r\\n\\u2502 \\u251C"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "GetBlocks",
+        "status":  "pass",
+        "elapsedMs":  505,
+        "detail":  "{\"items\":[{\"typeName\":\"OB\",\"name\":\"Main\",\"namespace\":\"\",\"programmingLanguage\":\"LAD\",\"memoryLayout\":\"Optimized\",\"isConsistent\":false,\"headerName\":\"\",\"modifiedDate\":\"2026-04-07T06:27:36.0345306Z\",\"isKnowHowProtected\":false"
+    },
+    {
+        "category":  "L1-PLC-Build",
+        "tool":  "PlcBuildAndImport(tagtable real)",
+        "status":  "pass",
+        "elapsedMs":  10450,
+        "detail":  "{\"dryRun\":false,\"buildKind\":\"tagtable\",\"generatedDirectory\":\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_import_20260511_110115_445\",\"writtenFiles\":[\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_buil"
+    },
+    {
+        "category":  "L1-PLC-Build",
+        "tool":  "PlcBuildAndImport(globaldb real)",
+        "status":  "pass",
+        "elapsedMs":  5184,
+        "detail":  "{\"dryRun\":false,\"buildKind\":\"globaldb\",\"generatedDirectory\":\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_import_20260511_110125_893\",\"writtenFiles\":[\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_buil"
+    },
+    {
+        "category":  "L1-PLC-Build",
+        "tool":  "PlcBuildAndImport(fc real)",
+        "status":  "pass",
+        "elapsedMs":  5185,
+        "detail":  "{\"dryRun\":false,\"buildKind\":\"fc\",\"generatedDirectory\":\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_import_20260511_110131_091\",\"writtenFiles\":[\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_impo"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "GetBlocks(after-write)",
+        "status":  "pass",
+        "elapsedMs":  1260,
+        "detail":  "{\"items\":[{\"typeName\":\"OB\",\"name\":\"Main\",\"namespace\":\"\",\"programmingLanguage\":\"LAD\",\"memoryLayout\":\"Optimized\",\"isConsistent\":false,\"headerName\":\"\",\"modifiedDate\":\"2026-04-07T06:27:36.0345306Z\",\"isKnowHowProtected\":false"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "CompileSoftware(real)",
+        "status":  "pass",
+        "elapsedMs":  18868,
+        "detail":  "{\"state\":\"Warning\",\"errorCount\":0,\"warningCount\":12,\"messages\":[\"State=Warning; Path=\\u5B89\\u5168PLC\",\"State=Warning; Description=Compiling finished (errors: 0; warnings: 12)\"],\"message\":\"Software \\u0027\\u5B89\\u5168PLC\\u"
+    },
+    {
+        "category":  "L2-Online",
+        "tool":  "CheckDownloadReadiness",
+        "status":  "pass",
+        "elapsedMs":  700,
+        "detail":  "{\"ready\":true,\"hasDownloadProvider\":true,\"hasConfiguration\":true,\"isConsistent\":true,\"message\":\"PLC \\u0027\\u5B89\\u5168PLC\\u0027 is ready for download.\"}"
+    },
+    {
+        "category":  "L2-Online",
+        "tool":  "GetOnlineState",
+        "status":  "pass",
+        "elapsedMs":  602,
+        "detail":  "{\"state\":\"Offline\",\"isOnline\":false,\"isReachable\":false,\"message\":\"\\u0027\\u5B89\\u5168PLC\\u0027 is offline. Call GoOnline first.\"}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "SaveProject",
+        "status":  "pass",
+        "elapsedMs":  628,
+        "detail":  "{\"message\":\"Local project saved\",\"meta\":{\"timestamp\":\"2026-05-11T11:01:58.317767+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L0",
+        "tool":  "GetState",
+        "status":  "pass",
+        "elapsedMs":  133,
+        "detail":  "{\"isConnected\":true,\"project\":\"\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\",\"session\":\"-\",\"message\":\"TIA-Portal MCP server state retrieved\",\"meta\":{\"timestamp\":\"2026-05-11T11:01:58.4538244+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Portal",
+        "tool":  "Disconnect",
+        "status":  "pass",
+        "elapsedMs":  56,
+        "detail":  "{\"message\":\"Disconnected from TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:01:58.5128227+08:00\",\"success\":true}}"
+    }
+]

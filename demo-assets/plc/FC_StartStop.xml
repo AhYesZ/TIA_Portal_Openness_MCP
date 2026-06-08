@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V21" />
+  <DocumentInfo>
+    <Created>2000-01-01T00:00:00.0000000Z</Created>
+    <ExportSetting>None</ExportSetting>
+    <InstalledProducts />
+  </DocumentInfo>
+  <SW.Blocks.FC ID="0">
+    <AttributeList>
+      <Interface>
+        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+          <Section Name="Input" />
+          <Section Name="Output" />
+          <Section Name="InOut" />
+          <Section Name="Temp" />
+          <Section Name="Constant" />
+          <Section Name="Return">
+            <Member Name="Ret_Val" Datatype="Void" />
+          </Section>
+        </Sections>
+      </Interface>
+      <MemoryLayout>Optimized</MemoryLayout>
+      <Name>FC_StartStop</Name>
+      <Namespace />
+      <Number>10</Number>
+      <ProgrammingLanguage>SCL</ProgrammingLanguage>
+      <SetENOAutomatically>false</SetENOAutomatically>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>zh-CN</Culture>
+              <Text>起保停（Start-Hold-Stop）功能：通过全局 PLC 变量 I_Start / I_Stop / I_EStop 输入，
+锁存输出 Q_Run。优先级：急停 &gt; 停止 &gt; 启动。
+全局变量在 DefaultTagTable 中定义；HMI 通过 SetBit/ResetBit 写 I_Start/I_Stop。</Text>
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <SW.Blocks.CompileUnit ID="3" CompositionName="CompileUnits">
+        <AttributeList>
+          <NetworkSource>
+            <StructuredText xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4">
+              <Token Text="IF" UId="21" /><Blank UId="22" />
+              <Access Scope="GlobalVariable" UId="23"><Symbol UId="24"><Component Name="I_EStop" UId="25" /></Symbol></Access>
+              <Blank UId="26" /><Token Text="THEN" UId="27" /><NewLine UId="28" />
+              <Blank Num="2" UId="29" />
+              <Access Scope="GlobalVariable" UId="30"><Symbol UId="31"><Component Name="Q_Run" UId="32" /></Symbol></Access>
+              <Blank UId="33" /><Token Text=":=" UId="34" /><Blank UId="35" />
+              <Access Scope="LiteralConstant" UId="36"><Constant UId="37"><ConstantValue UId="38">FALSE</ConstantValue></Constant></Access>
+              <Token Text=";" UId="39" /><NewLine UId="40" />
+              <Token Text="ELSIF" UId="41" /><Blank UId="42" />
+              <Access Scope="GlobalVariable" UId="43"><Symbol UId="44"><Component Name="I_Stop" UId="45" /></Symbol></Access>
+              <Blank UId="46" /><Token Text="THEN" UId="47" /><NewLine UId="48" />
+              <Blank Num="2" UId="49" />
+              <Access Scope="GlobalVariable" UId="50"><Symbol UId="51"><Component Name="Q_Run" UId="52" /></Symbol></Access>
+              <Blank UId="53" /><Token Text=":=" UId="54" /><Blank UId="55" />
+              <Access Scope="LiteralConstant" UId="56"><Constant UId="57"><ConstantValue UId="58">FALSE</ConstantValue></Constant></Access>
+              <Token Text=";" UId="59" /><NewLine UId="60" />
+              <Token Text="ELSIF" UId="61" /><Blank UId="62" />
+              <Access Scope="GlobalVariable" UId="63"><Symbol UId="64"><Component Name="I_Start" UId="65" /></Symbol></Access>
+              <Blank UId="66" /><Token Text="THEN" UId="67" /><NewLine UId="68" />
+              <Blank Num="2" UId="69" />
+              <Access Scope="GlobalVariable" UId="70"><Symbol UId="71"><Component Name="Q_Run" UId="72" /></Symbol></Access>
+              <Blank UId="73" /><Token Text=":=" UId="74" /><Blank UId="75" />
+              <Access Scope="LiteralConstant" UId="76"><Constant UId="77"><ConstantValue UId="78">TRUE</ConstantValue></Constant></Access>
+              <Token Text=";" UId="79" /><NewLine UId="80" />
+              <Token Text="END_IF" UId="81" /><Token Text=";" UId="82" /><NewLine UId="83" />
+            </StructuredText>
+          </NetworkSource>
+          <ProgrammingLanguage>SCL</ProgrammingLanguage>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText ID="4" CompositionName="Comment">
+            <ObjectList>
+              <MultilingualTextItem ID="5" CompositionName="Items">
+                <AttributeList>
+                  <Culture>zh-CN</Culture>
+                  <Text>读全局输入 I_EStop / I_Stop / I_Start，写全局输出 Q_Run（锁存）</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+          <MultilingualText ID="6" CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem ID="7" CompositionName="Items">
+                <AttributeList>
+                  <Culture>zh-CN</Culture>
+                  <Text>起保停核心逻辑</Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+    </ObjectList>
+  </SW.Blocks.FC>
+</Document>

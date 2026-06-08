@@ -1,0 +1,142 @@
+﻿[
+    {
+        "category":  "L1-Portal",
+        "tool":  "Connect",
+        "status":  "pass",
+        "elapsedMs":  995,
+        "detail":  "{\"message\":\"Connected to TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:02.0288301+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProject",
+        "status":  "pass",
+        "elapsedMs":  100,
+        "detail":  "{\"items\":[{\"name\":\"\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\",\"attributes\":[{\"name\":\"Author\",\"value\":\"XL626\",\"accessMode\":\"Read\"},{\"name\":\"Copyright\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"CreationTime\",\"value\":\"2026-01-26T08:25:42.4773471Z\",\"accessMode\":\"Read\"},{\"name\":\"Family\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"IsModified\",\"value\":false,\"accessMode\":\"Read\"},{\"nam"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "AttachToOpenProject",
+        "status":  "pass",
+        "elapsedMs":  46,
+        "detail":  "{\"message\":\"Attached to open project \\u0027\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:02.2868296+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiConnection(HMI_Conn_SafetyPLC -\u003e 安全PLC)",
+        "status":  "pass",
+        "elapsedMs":  277,
+        "detail":  "{\"objectKind\":\"HmiConnection\",\"objectPath\":\"HMI_RT_1:HMI_Conn_SafetyPLC\",\"typeName\":\"Siemens.Engineering.HmiUnified.HmiConnections.HmiConnection\",\"members\":[{\"name\":\"DriverProperties\",\"kind\":\"Property\",\"type\":\"Siemens.Engineering.HmiUnified.HmiConnections.DriverPropertyComposition\"},{\"name\":\"Parent\",\"kind\":\"Property\",\"type\":\"Siemens.Engineering.IEngineeringObject\"},{\"name\":\"Com"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiTagTable(MCPVerify_HmiTags)",
+        "status":  "pass",
+        "elapsedMs":  65,
+        "detail":  "{\"message\":\"HMI tag table \\u0027MCPVerify_HmiTags\\u0027 exists.\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:02.5750273+08:00\",\"tool\":\"EnsureUnifiedHmiTagTable\",\"success\":true,\"action\":\"exists\",\"tagTableType\":\"Siemens.Engineering.HmiUnified.HmiTags.HmiTagTable\"}}"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiTag(StartCmd:Bool)",
+        "status":  "pass",
+        "elapsedMs":  576,
+        "detail":  "{\"message\":\"HMI tag \\u0027StartCmd\\u0027 exists.\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:02.6454865+08:00\",\"tool\":\"EnsureUnifiedHmiTag\",\"success\":true,\"action\":\"exists\",\"tagType\":\"Siemens.Engineering.HmiUnified.HmiTags.HmiTag\",\"tagEnumHints\":\"TagType:Siemens.Engineering.HmiUnified.HmiTags.HmiTagType=[Simple,UDT,Array] | AccessMode:Siemens.Engineering.HmiUnified.HmiTags.HmiAccess"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiTag(StopCmd:Bool)",
+        "status":  "pass",
+        "elapsedMs":  592,
+        "detail":  "{\"message\":\"HMI tag \\u0027StopCmd\\u0027 exists.\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:03.2219415+08:00\",\"tool\":\"EnsureUnifiedHmiTag\",\"success\":true,\"action\":\"exists\",\"tagType\":\"Siemens.Engineering.HmiUnified.HmiTags.HmiTag\",\"tagEnumHints\":\"TagType:Siemens.Engineering.HmiUnified.HmiTags.HmiTagType=[Simple,UDT,Array] | AccessMode:Siemens.Engineering.HmiUnified.HmiTags.HmiAccessM"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiTag(Running:Bool)",
+        "status":  "pass",
+        "elapsedMs":  583,
+        "detail":  "{\"message\":\"HMI tag \\u0027Running\\u0027 exists.\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:03.8159482+08:00\",\"tool\":\"EnsureUnifiedHmiTag\",\"success\":true,\"action\":\"exists\",\"tagType\":\"Siemens.Engineering.HmiUnified.HmiTags.HmiTag\",\"tagEnumHints\":\"TagType:Siemens.Engineering.HmiUnified.HmiTags.HmiTagType=[Simple,UDT,Array] | AccessMode:Siemens.Engineering.HmiUnified.HmiTags.HmiAccessM"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiTag(SpeedSP:Int)",
+        "status":  "pass",
+        "elapsedMs":  551,
+        "detail":  "{\"message\":\"HMI tag \\u0027SpeedSP\\u0027 exists.\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:04.4017911+08:00\",\"tool\":\"EnsureUnifiedHmiTag\",\"success\":true,\"action\":\"exists\",\"tagType\":\"Siemens.Engineering.HmiUnified.HmiTags.HmiTag\",\"tagEnumHints\":\"TagType:Siemens.Engineering.HmiUnified.HmiTags.HmiTagType=[Simple,UDT,Array] | AccessMode:Siemens.Engineering.HmiUnified.HmiTags.HmiAccessM"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiTag(SpeedAct:Int)",
+        "status":  "pass",
+        "elapsedMs":  646,
+        "detail":  "{\"message\":\"HMI tag \\u0027SpeedAct\\u0027 exists.\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:04.9617592+08:00\",\"tool\":\"EnsureUnifiedHmiTag\",\"success\":true,\"action\":\"exists\",\"tagType\":\"Siemens.Engineering.HmiUnified.HmiTags.HmiTag\",\"tagEnumHints\":\"TagType:Siemens.Engineering.HmiUnified.HmiTags.HmiTagType=[Simple,UDT,Array] | AccessMode:Siemens.Engineering.HmiUnified.HmiTags.HmiAccess"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiScreen(MCPVerify_MainScreen 1024x768)",
+        "status":  "pass",
+        "elapsedMs":  97,
+        "detail":  "{\"message\":\"HMI screen \\u0027MCPVerify_MainScreen\\u0027 exists.\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:05.607248+08:00\",\"tool\":\"EnsureUnifiedHmiScreen\",\"success\":true,\"action\":\"exists\",\"screenType\":\"Siemens.Engineering.HmiUnified.UI.Screens.HmiScreen\"}}"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "ApplyUnifiedHmiScreenDesignJson(MCPVerify_MainScreen)",
+        "status":  "pass",
+        "elapsedMs":  1906,
+        "detail":  "{\"message\":\"Applied Unified HMI design to \\u0027MCPVerify_MainScreen\\u0027. changed=12, failed=0.\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:05.7045961+08:00\",\"tool\":\"ApplyUnifiedHmiScreenDesignJson\",\"success\":true,\"changed\":[\"updated:TitleBar:HmiRectangle\",\"updated:TitleText:HmiText\",\"updated:Panel:HmiRectangle\",\"updated:StatusLbl:HmiText\",\"updated:RunLamp:HmiRectangle\",\"updated:R"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiButtonAction(StartBtn.Down=set-bit StartCmd)",
+        "status":  "pass",
+        "elapsedMs":  3461,
+        "detail":  "{\"message\":\"Unified HMI button action applied via generated recipe.\",\"meta\":{\"recipeKind\":\"set-bit\",\"event\":\"Down\",\"targetTags\":[\"StartCmd\"],\"targetScreen\":\"\",\"targetPopup\":\"\",\"script\":\"HMIRuntime.Tags.SysFct.SetBitInTag(\\u0022StartCmd\\u0022, 0);\",\"safetyLevel\":\"command\",\"requiresApiDiscovery\":false,\"requiresSafetyPolicy\":false,\"applyBlockedReason\":\"\",\"applyBlocked\":false,\"requ"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiButtonAction(StartBtn.Up=reset-bit StartCmd)",
+        "status":  "pass",
+        "elapsedMs":  404,
+        "detail":  "{\"message\":\"Unified HMI button action applied via generated recipe.\",\"meta\":{\"recipeKind\":\"reset-bit\",\"event\":\"Up\",\"targetTags\":[\"StartCmd\"],\"targetScreen\":\"\",\"targetPopup\":\"\",\"script\":\"HMIRuntime.Tags.SysFct.ResetBitInTag(\\u0022StartCmd\\u0022, 0);\",\"safetyLevel\":\"command\",\"requiresApiDiscovery\":false,\"requiresSafetyPolicy\":false,\"applyBlockedReason\":\"\",\"applyBlocked\":false,\"re"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiButtonAction(StopBtn.Down=set-bit StopCmd)",
+        "status":  "pass",
+        "elapsedMs":  428,
+        "detail":  "{\"message\":\"Unified HMI button action applied via generated recipe.\",\"meta\":{\"recipeKind\":\"set-bit\",\"event\":\"Down\",\"targetTags\":[\"StopCmd\"],\"targetScreen\":\"\",\"targetPopup\":\"\",\"script\":\"HMIRuntime.Tags.SysFct.SetBitInTag(\\u0022StopCmd\\u0022, 0);\",\"safetyLevel\":\"command\",\"requiresApiDiscovery\":false,\"requiresSafetyPolicy\":false,\"applyBlockedReason\":\"\",\"applyBlocked\":false,\"requir"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiButtonAction(StopBtn.Up=reset-bit StopCmd)",
+        "status":  "pass",
+        "elapsedMs":  404,
+        "detail":  "{\"message\":\"Unified HMI button action applied via generated recipe.\",\"meta\":{\"recipeKind\":\"reset-bit\",\"event\":\"Up\",\"targetTags\":[\"StopCmd\"],\"targetScreen\":\"\",\"targetPopup\":\"\",\"script\":\"HMIRuntime.Tags.SysFct.ResetBitInTag(\\u0022StopCmd\\u0022, 0);\",\"safetyLevel\":\"command\",\"requiresApiDiscovery\":false,\"requiresSafetyPolicy\":false,\"applyBlockedReason\":\"\",\"applyBlocked\":false,\"requ"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "EnsureUnifiedHmiButtonAction(StartBtn.Tapped=toggle-bit Running)",
+        "status":  "pass",
+        "elapsedMs":  472,
+        "detail":  "{\"message\":\"Unified HMI button action applied via generated recipe.\",\"meta\":{\"recipeKind\":\"toggle-bit\",\"event\":\"Tapped\",\"targetTags\":[\"Running\"],\"targetScreen\":\"\",\"targetPopup\":\"\",\"script\":\"HMIRuntime.Tags.SysFct.ToggleBitInTag(\\u0022Running\\u0022, 0);\",\"safetyLevel\":\"command\",\"requiresApiDiscovery\":false,\"requiresSafetyPolicy\":false,\"applyBlockedReason\":\"\",\"applyBlocked\":false"
+    },
+    {
+        "category":  "L2-HMI",
+        "tool":  "GetHmiScreens(post-apply)",
+        "status":  "pass",
+        "elapsedMs":  98,
+        "detail":  "{\"items\":[\"\\u753B\\u9762_1\",\"MCPVerify_MainScreen\"],\"message\":\"HMI screens listed for \\u0027HMI_RT_1\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:12.8920906+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "SaveProject",
+        "status":  "pass",
+        "elapsedMs":  2626,
+        "detail":  "{\"message\":\"Local project saved\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:15.5177494+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Portal",
+        "tool":  "Disconnect",
+        "status":  "pass",
+        "elapsedMs":  59,
+        "detail":  "{\"message\":\"Disconnected from TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:55:15.5811465+08:00\",\"success\":true}}"
+    }
+]

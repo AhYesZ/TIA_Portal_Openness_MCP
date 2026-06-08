@@ -1,0 +1,27 @@
+﻿# Unified HMI End-to-end Verification
+
+Run: 2026-05-11 11:55:17
+PASS: 20 / 20  FAIL: 0
+
+| Layer | Tool | Time(ms) | Status & Detail |
+|---|---|---:|---|
+| L1-Portal | `Connect` | 995 | PASS: {"message":"Connected to TIA-Portal","meta":{"timestamp":"2026-05-11T11:55:02.0288301+08:00","success":true}} |
+| L1-Project | `GetProject` | 100 | PASS: {"items":[{"name":"\u6C5F\u590F\u6D4B\u8BD5\u9879\u76EEV21-260511","attributes":[{"name":"Author","value":"XL626","accessMode":"Read"},{"name":"Copyright","value":"","accessMode":"Read"},{"name":"CreationTime","value":"2 |
+| L1-Project | `AttachToOpenProject` | 46 | PASS: {"message":"Attached to open project \u0027\u6C5F\u590F\u6D4B\u8BD5\u9879\u76EEV21-260511\u0027","meta":{"timestamp":"2026-05-11T11:55:02.2868296+08:00","success":true}} |
+| L2-HMI | `EnsureUnifiedHmiConnection(HMI_Conn_SafetyPLC -> 安全PLC)` | 277 | PASS: {"objectKind":"HmiConnection","objectPath":"HMI_RT_1:HMI_Conn_SafetyPLC","typeName":"Siemens.Engineering.HmiUnified.HmiConnections.HmiConnection","members":[{"name":"DriverProperties","kind":"Property","type":"Siemens.En |
+| L2-HMI | `EnsureUnifiedHmiTagTable(MCPVerify_HmiTags)` | 65 | PASS: {"message":"HMI tag table \u0027MCPVerify_HmiTags\u0027 exists.","meta":{"timestamp":"2026-05-11T11:55:02.5750273+08:00","tool":"EnsureUnifiedHmiTagTable","success":true,"action":"exists","tagTableType":"Siemens.Engineer |
+| L2-HMI | `EnsureUnifiedHmiTag(StartCmd:Bool)` | 576 | PASS: {"message":"HMI tag \u0027StartCmd\u0027 exists.","meta":{"timestamp":"2026-05-11T11:55:02.6454865+08:00","tool":"EnsureUnifiedHmiTag","success":true,"action":"exists","tagType":"Siemens.Engineering.HmiUnified.HmiTags.Hm |
+| L2-HMI | `EnsureUnifiedHmiTag(StopCmd:Bool)` | 592 | PASS: {"message":"HMI tag \u0027StopCmd\u0027 exists.","meta":{"timestamp":"2026-05-11T11:55:03.2219415+08:00","tool":"EnsureUnifiedHmiTag","success":true,"action":"exists","tagType":"Siemens.Engineering.HmiUnified.HmiTags.Hmi |
+| L2-HMI | `EnsureUnifiedHmiTag(Running:Bool)` | 583 | PASS: {"message":"HMI tag \u0027Running\u0027 exists.","meta":{"timestamp":"2026-05-11T11:55:03.8159482+08:00","tool":"EnsureUnifiedHmiTag","success":true,"action":"exists","tagType":"Siemens.Engineering.HmiUnified.HmiTags.Hmi |
+| L2-HMI | `EnsureUnifiedHmiTag(SpeedSP:Int)` | 551 | PASS: {"message":"HMI tag \u0027SpeedSP\u0027 exists.","meta":{"timestamp":"2026-05-11T11:55:04.4017911+08:00","tool":"EnsureUnifiedHmiTag","success":true,"action":"exists","tagType":"Siemens.Engineering.HmiUnified.HmiTags.Hmi |
+| L2-HMI | `EnsureUnifiedHmiTag(SpeedAct:Int)` | 646 | PASS: {"message":"HMI tag \u0027SpeedAct\u0027 exists.","meta":{"timestamp":"2026-05-11T11:55:04.9617592+08:00","tool":"EnsureUnifiedHmiTag","success":true,"action":"exists","tagType":"Siemens.Engineering.HmiUnified.HmiTags.Hm |
+| L2-HMI | `EnsureUnifiedHmiScreen(MCPVerify_MainScreen 1024x768)` | 97 | PASS: {"message":"HMI screen \u0027MCPVerify_MainScreen\u0027 exists.","meta":{"timestamp":"2026-05-11T11:55:05.607248+08:00","tool":"EnsureUnifiedHmiScreen","success":true,"action":"exists","screenType":"Siemens.Engineering.H |
+| L2-HMI | `ApplyUnifiedHmiScreenDesignJson(MCPVerify_MainScreen)` | 1906 | PASS: {"message":"Applied Unified HMI design to \u0027MCPVerify_MainScreen\u0027. changed=12, failed=0.","meta":{"timestamp":"2026-05-11T11:55:05.7045961+08:00","tool":"ApplyUnifiedHmiScreenDesignJson","success":true,"changed" |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StartBtn.Down=set-bit StartCmd)` | 3461 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"set-bit","event":"Down","targetTags":["StartCmd"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.SetBitInTag |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StartBtn.Up=reset-bit StartCmd)` | 404 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"reset-bit","event":"Up","targetTags":["StartCmd"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.ResetBitInT |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StopBtn.Down=set-bit StopCmd)` | 428 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"set-bit","event":"Down","targetTags":["StopCmd"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.SetBitInTag( |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StopBtn.Up=reset-bit StopCmd)` | 404 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"reset-bit","event":"Up","targetTags":["StopCmd"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.ResetBitInTa |
+| L2-HMI | `EnsureUnifiedHmiButtonAction(StartBtn.Tapped=toggle-bit Running)` | 472 | PASS: {"message":"Unified HMI button action applied via generated recipe.","meta":{"recipeKind":"toggle-bit","event":"Tapped","targetTags":["Running"],"targetScreen":"","targetPopup":"","script":"HMIRuntime.Tags.SysFct.ToggleB |
+| L2-HMI | `GetHmiScreens(post-apply)` | 98 | PASS: {"items":["\u753B\u9762_1","MCPVerify_MainScreen"],"message":"HMI screens listed for \u0027HMI_RT_1\u0027","meta":{"timestamp":"2026-05-11T11:55:12.8920906+08:00","success":true}} |
+| L1-Project | `SaveProject` | 2626 | PASS: {"message":"Local project saved","meta":{"timestamp":"2026-05-11T11:55:15.5177494+08:00","success":true}} |
+| L1-Portal | `Disconnect` | 59 | PASS: {"message":"Disconnected from TIA-Portal","meta":{"timestamp":"2026-05-11T11:55:15.5811465+08:00","success":true}} |

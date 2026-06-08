@@ -1,0 +1,72 @@
+﻿[
+    {
+        "category":  "L1-Portal",
+        "tool":  "Connect",
+        "status":  "pass",
+        "elapsedMs":  955,
+        "detail":  "{\"message\":\"Connected to TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:38:28.0876568+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProject",
+        "status":  "pass",
+        "elapsedMs":  74,
+        "detail":  "{\"items\":[{\"name\":\"\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\",\"attributes\":[{\"name\":\"Author\",\"value\":\"XL626\",\"accessMode\":\"Read\"},{\"name\":\"Copyright\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"CreationTime\",\"value\":\"2026-01-26T08:25:42.4773471Z\",\"accessMode\":\"Read\"},{\"name\":\"Family\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"IsModified\",\"value\":false,\"accessMode\":\"Read\"},{\"nam"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "AttachToOpenProject",
+        "status":  "pass",
+        "elapsedMs":  38,
+        "detail":  "{\"message\":\"Attached to open project \\u0027\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:38:28.3280052+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-SCL",
+        "tool":  "PlcBuildAndImport(SCL multi-instruction)",
+        "status":  "pass",
+        "elapsedMs":  2308,
+        "detail":  "{\"dryRun\":false,\"buildKind\":\"fc\",\"generatedDirectory\":\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_import_20260511_113828_370\",\"writtenFiles\":[\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_import_20260511_113828_370\\\\MCPVerify_FC_SCL_Multi.xml\"],\"discoveredTypes\":[],\"discoveredTagTables\":[],\"discoveredTechnologyObjects\":[],\"discoveredBlocks\":[\"MCPVeri"
+    },
+    {
+        "category":  "L2-SCL",
+        "tool":  "CompileSoftware(after SCL import)",
+        "status":  "pass",
+        "elapsedMs":  1057,
+        "detail":  "{\"state\":\"Warning\",\"errorCount\":0,\"warningCount\":12,\"messages\":[\"State=Warning; Path=\\u5B89\\u5168PLC\",\"State=Warning; Description=Compiling finished (errors: 0; warnings: 12)\"],\"message\":\"Software \\u0027\\u5B89\\u5168PLC\\u0027 compiled. State=Warning Errors=0 Warnings=12\",\"meta\":{\"timestamp\":\"2026-05-11T11:38:31.6997636+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L3-Online",
+        "tool":  "GetOnlineState(pre-download)",
+        "status":  "pass",
+        "elapsedMs":  555,
+        "detail":  "{\"state\":\"Offline\",\"isOnline\":false,\"isReachable\":false,\"message\":\"\\u0027\\u5B89\\u5168PLC\\u0027 is offline. Call GoOnline first.\"}"
+    },
+    {
+        "category":  "L3-Online",
+        "tool":  "CheckDownloadReadiness(safetyPlc)",
+        "status":  "pass",
+        "elapsedMs":  470,
+        "detail":  "{\"ready\":true,\"hasDownloadProvider\":true,\"hasConfiguration\":true,\"isConsistent\":true,\"message\":\"PLC \\u0027\\u5B89\\u5168PLC\\u0027 is ready for download.\"}"
+    },
+    {
+        "category":  "L3-Download",
+        "tool":  "DownloadToPlc(safetyPlc)",
+        "status":  "fail",
+        "elapsedMs":  503,
+        "detail":  "tool-error: An error occurred invoking \u0027DownloadToPlc\u0027: Download to \u0027安全PLC\u0027 failed: Download failed: 类型“Siemens.Engineering.Connection.ConnectionConfiguration”的对象无法转换为类型“Siemens.Engineering.Connection.IConfiguration”。"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "SaveProject",
+        "status":  "pass",
+        "elapsedMs":  180,
+        "detail":  "{\"message\":\"Local project saved\",\"meta\":{\"timestamp\":\"2026-05-11T11:38:33.42529+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Portal",
+        "tool":  "Disconnect",
+        "status":  "pass",
+        "elapsedMs":  38,
+        "detail":  "{\"message\":\"Disconnected from TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:38:33.4739442+08:00\",\"success\":true}}"
+    }
+]

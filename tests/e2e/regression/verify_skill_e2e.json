@@ -1,0 +1,156 @@
+﻿[
+    {
+        "category":  "L0",
+        "tool":  "Bootstrap",
+        "status":  "pass",
+        "elapsedMs":  101,
+        "detail":  "{\"ready\":true,\"environment\":{\"tiaVersionInUse\":21,\"tiaVersionDetected\":21,\"opennessGroupOk\":true,\"tiaInstallPath\":\"D:\\\\app\\\\TIA21\\\\Portal V21\",\"transport\":\"stdio\"},\"portal\":{\"conne"
+    },
+    {
+        "category":  "L0",
+        "tool":  "GetState",
+        "status":  "pass",
+        "elapsedMs":  3,
+        "detail":  "{\"isConnected\":false,\"project\":\"-\",\"session\":\"-\",\"message\":\"TIA-Portal MCP server state retrieved\",\"meta\":{\"timestamp\":\"2026-05-11T10:31:45.2500242+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L0",
+        "tool":  "RunCapabilitySelfTest",
+        "status":  "pass",
+        "elapsedMs":  14,
+        "detail":  "{\"ok\":true,\"includeProjectTree\":false,\"items\":[{\"id\":\"openness.user-group\",\"name\":\"Siemens TIA Openness user group\",\"status\":\"pass\",\"detail\":\"Current user is in the Openness group."
+    },
+    {
+        "category":  "L2-Builder",
+        "tool":  "BuildPlcTagTableXml",
+        "status":  "pass",
+        "elapsedMs":  16,
+        "detail":  "{\"xml\":\"\\u003C?xml version=\\u00221.0\\u0022 encoding=\\u0022utf-8\\u0022?\\u003E\\r\\n\\u003CDocument\\u003E\\r\\n \\u003CEngineering version=\\u0022V21\\u0022 /\\u003E\\r\\n \\u003CDocumentInfo\\"
+    },
+    {
+        "category":  "L2-Builder",
+        "tool":  "ComposePlcFcBlockXml",
+        "status":  "pass",
+        "elapsedMs":  20,
+        "detail":  "{\"xml\":\"\\u003C?xml version=\\u00221.0\\u0022 encoding=\\u0022utf-8\\u0022?\\u003E\\r\\n\\u003CDocument\\u003E\\r\\n \\u003CEngineering version=\\u0022V21\\u0022 /\\u003E\\r\\n \\u003CDocumentInfo\\"
+    },
+    {
+        "category":  "L2-Builder",
+        "tool":  "BuildClassicHmiScreenXml",
+        "status":  "pass",
+        "elapsedMs":  26,
+        "detail":  "{\"xml\":\"\\u003C?xml version=\\u00221.0\\u0022 encoding=\\u0022utf-8\\u0022?\\u003E\\r\\n\\u003CDocument\\u003E\\r\\n \\u003CEngineering version=\\u0022V18\\u0022 /\\u003E\\r\\n \\u003CDocumentInfo\\"
+    },
+    {
+        "category":  "L1-Portal",
+        "tool":  "Connect",
+        "status":  "pass",
+        "elapsedMs":  748,
+        "detail":  "{\"message\":\"Connected to TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T10:31:46.0849178+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "AttachToOpenProject",
+        "status":  "pass",
+        "elapsedMs":  38,
+        "detail":  "{\"message\":\"Attached to open project \\u0027MCP_TankCtrl_20260510_230937\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T10:31:46.1268054+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProject",
+        "status":  "pass",
+        "elapsedMs":  64,
+        "detail":  "{\"items\":[{\"name\":\"MCP_TankCtrl_20260510_230937\",\"attributes\":[{\"name\":\"Author\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"Copyright\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"Creatio"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProjectTree",
+        "status":  "pass",
+        "elapsedMs":  335,
+        "detail":  "{\"tree\":\"\\u0060\\u0060\\u0060\\nMCP_TankCtrl_20260510_230937\\r\\n\\u251C\\u2500\\u2500 Devices [Collection]\\r\\n\\u2502 \\u251C\\u2500\\u2500 PLC_1 [Device: System:Device.S71200]\\r\\n\\u2502 "
+    },
+    {
+        "category":  "L1-Hardware",
+        "tool":  "GetDevices",
+        "status":  "pass",
+        "elapsedMs":  25,
+        "detail":  "{\"items\":[{\"name\":\"PLC_1\",\"description\":\"Siemens.Engineering.HW.DeviceImpl\",\"attributes\":[{\"name\":\"Author\",\"value\":\"XL626\",\"accessMode\":\"ReadWrite\"},{\"name\":\"Comment\",\"value\":\"\",\"a"
+    },
+    {
+        "category":  "L1-Hardware",
+        "tool":  "SearchHardwareCatalog",
+        "status":  "pass",
+        "elapsedMs":  509,
+        "detail":  "{\"keyword\":\"1211C\",\"count\":40,\"items\":[{\"source\":\"HardwareCatalog\",\"keyword\":\"1211C\",\"articleNumber\":\"6ES7 211-1AD30-0XB0\",\"catalogPath\":\"Root\\\\\\u63A7\\u5236\\u5668\\\\SIMATIC S7-1200\\"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "GetSoftwareInfo",
+        "status":  "pass",
+        "elapsedMs":  19,
+        "detail":  "{\"name\":\"PLC_1\",\"description\":\"Siemens.Engineering.SW.PlcSoftware\",\"attributes\":[{\"name\":\"Name\",\"value\":\"PLC_1\",\"accessMode\":\"Read\"}],\"message\":\"Software info retrieved from \\u0027"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "GetSoftwareTree",
+        "status":  "pass",
+        "elapsedMs":  67,
+        "detail":  "{\"tree\":\"\\u0060\\u0060\\u0060\\nPLC_1 [PLC Software]\\r\\n\\u251C\\u2500\\u2500 Program blocks\\r\\n\\u2502 \\u251C\\u2500\\u2500 Main [OB1, LAD]\\r\\n\\u2502 \\u251C\\u2500\\u2500 DB_Tank [DB1, D"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "GetBlocks",
+        "status":  "pass",
+        "elapsedMs":  285,
+        "detail":  "{\"items\":[{\"typeName\":\"OB\",\"name\":\"Main\",\"namespace\":\"\",\"programmingLanguage\":\"LAD\",\"memoryLayout\":\"Optimized\",\"isConsistent\":true,\"headerName\":\"\",\"modifiedDate\":\"2026-05-10T15:09:"
+    },
+    {
+        "category":  "L1-PLC-Build",
+        "tool":  "PlcBuildAndImport",
+        "status":  "pass",
+        "elapsedMs":  12,
+        "detail":  "{\"dryRun\":true,\"buildKind\":\"tagtable\",\"generatedDirectory\":\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_import_20260511_103147_491\",\"writtenFiles\":[\"C:\\\\Users\\\\XL626\\"
+    },
+    {
+        "category":  "L1-PLC-Build",
+        "tool":  "PlcBuildAndImport",
+        "status":  "pass",
+        "elapsedMs":  10,
+        "detail":  "{\"dryRun\":true,\"buildKind\":\"globaldb\",\"generatedDirectory\":\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_import_20260511_103147_507\",\"writtenFiles\":[\"C:\\\\Users\\\\XL626\\"
+    },
+    {
+        "category":  "L1-PLC-Build",
+        "tool":  "PlcBuildAndImport",
+        "status":  "pass",
+        "elapsedMs":  5,
+        "detail":  "{\"dryRun\":true,\"buildKind\":\"fc\",\"generatedDirectory\":\"C:\\\\Users\\\\XL626\\\\AppData\\\\Local\\\\Temp\\\\tia_mcp_plc_build_import_20260511_103147_514\",\"writtenFiles\":[\"C:\\\\Users\\\\XL626\\\\AppDa"
+    },
+    {
+        "category":  "L2-Online",
+        "tool":  "GetOnlineState",
+        "status":  "pass",
+        "elapsedMs":  51,
+        "detail":  "{\"state\":\"Offline\",\"isOnline\":false,\"isReachable\":false,\"message\":\"\\u0027PLC_1\\u0027 is offline. Call GoOnline first.\"}"
+    },
+    {
+        "category":  "L2-Online",
+        "tool":  "CheckDownloadReadiness",
+        "status":  "pass",
+        "elapsedMs":  51,
+        "detail":  "{\"ready\":true,\"hasDownloadProvider\":true,\"hasConfiguration\":true,\"isConsistent\":true,\"message\":\"PLC \\u0027PLC_1\\u0027 is ready for download.\"}"
+    },
+    {
+        "category":  "L0",
+        "tool":  "GetState",
+        "status":  "pass",
+        "elapsedMs":  50,
+        "detail":  "{\"isConnected\":true,\"project\":\"MCP_TankCtrl_20260510_230937\",\"session\":\"-\",\"message\":\"TIA-Portal MCP server state retrieved\",\"meta\":{\"timestamp\":\"2026-05-11T10:31:47.6749422+08:00\""
+    },
+    {
+        "category":  "L1-Portal",
+        "tool":  "Disconnect",
+        "status":  "pass",
+        "elapsedMs":  31,
+        "detail":  "{\"message\":\"Disconnected from TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T10:31:47.7097494+08:00\",\"success\":true}}"
+    }
+]

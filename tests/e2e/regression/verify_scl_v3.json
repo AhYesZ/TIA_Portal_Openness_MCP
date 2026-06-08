@@ -1,0 +1,72 @@
+﻿[
+    {
+        "category":  "L1-Portal",
+        "tool":  "Connect",
+        "status":  "pass",
+        "elapsedMs":  18399,
+        "detail":  "{\"message\":\"Connected to TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:21.8183705+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProject",
+        "status":  "pass",
+        "elapsedMs":  476,
+        "detail":  "{\"items\":[{\"name\":\"\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\",\"attributes\":[{\"name\":\"Author\",\"value\":\"XL626\",\"accessMode\":\"Read\"},{\"name\":\"Copyright\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"CreationTime\",\"value\":\"2026-01-26T08:25:42.4773471Z\",\"accessMode\":\"Read\"},{\"name\":\"Family\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"IsModified\",\"value\":false,\"accessMode\":\"Read\"},{\"name\":\"IsPrimary\",\"value\":true,\"accessMode\":\"Read\"},{\"name\":\"LastModified\",\"value\":\"2026-05-11T06:10:20.4316295Z\",\"accessMo"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "AttachToOpenProject",
+        "status":  "pass",
+        "elapsedMs":  40,
+        "detail":  "{\"message\":\"Attached to open project \\u0027\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:22.5430013+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-PLC",
+        "tool":  "DeletePlcExternalSource(MCPVerify_FC_SCL_v3.scl)",
+        "status":  "pass",
+        "elapsedMs":  1166,
+        "detail":  "{\"message\":\"PLC external source \\u0027MCPVerify_FC_SCL_v3.scl\\u0027 deleted or was not present\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:23.7109242+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-PLC",
+        "tool":  "ImportPlcExternalSource(MCPVerify_FC_SCL_v3.scl)",
+        "status":  "pass",
+        "elapsedMs":  712,
+        "detail":  "{\"message\":\"PLC external source imported\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:24.4253229+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-PLC",
+        "tool":  "GetPlcExternalSources(安全PLC)",
+        "status":  "pass",
+        "elapsedMs":  331,
+        "detail":  "{\"items\":[\"HPTimer.scl\",\"Ramp.scl\",\"S_Curve.scl\",\"TrapezoidalCurve.scl\",\"LinearCtrl_SCurve_PID.scl\",\"FB310_Drive_ MoveAbsolute_S.scl\",\"FC320_RC_Filter.scl\",\"SpeedTest.scl\",\"test.scl\",\"FB_PosSpd_Smooth_mm.scl\",\"FB_ReadInclinometer.scl\",\"DB_InclinoData.db\",\"MCPVerify_FC_SCL_v2.scl\",\"MCPVerify_FC_SCL_v3\",\"MCPVerify_FC_SCL_v3.scl\"],\"message\":\"PLC external sources listed for \\u0027\\u5B89\\u5168PLC\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:24.759817+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-PLC",
+        "tool":  "GenerateBlocksFromExternalSource(MCPVerify_FC_SCL_v3.scl)",
+        "status":  "pass",
+        "elapsedMs":  17884,
+        "detail":  "{\"message\":\"Blocks generated from external source \\u0027MCPVerify_FC_SCL_v3.scl\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:42.646355+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L2-PLC",
+        "tool":  "CompileSoftware(安全PLC)",
+        "status":  "pass",
+        "elapsedMs":  4816,
+        "detail":  "{\"state\":\"Warning\",\"errorCount\":0,\"warningCount\":12,\"messages\":[\"State=Warning; Path=\\u5B89\\u5168PLC\",\"State=Warning; Description=Compiling finished (errors: 0; warnings: 12)\"],\"message\":\"Software \\u0027\\u5B89\\u5168PLC\\u0027 compiled. State=Warning Errors=0 Warnings=12\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:47.4621704+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "SaveProject",
+        "status":  "pass",
+        "elapsedMs":  248,
+        "detail":  "{\"message\":\"Local project saved\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:47.7187071+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Portal",
+        "tool":  "Disconnect",
+        "status":  "pass",
+        "elapsedMs":  51,
+        "detail":  "{\"message\":\"Disconnected from TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T14:13:47.7726641+08:00\",\"success\":true}}"
+    }
+]

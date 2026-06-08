@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V21" />
+  <DocumentInfo>
+    <Created>2000-01-01T00:00:00.0000000Z</Created>
+    <ExportSetting>None</ExportSetting>
+    <InstalledProducts />
+  </DocumentInfo>
+  <SW.Types.PlcStruct ID="0">
+    <AttributeList>
+      <Interface>
+        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+          <Section Name="None">
+            <Member Name="Level" Datatype="Real">
+              <AttributeList>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">false</BooleanAttribute>
+              </AttributeList>
+              <Comment>
+                <MultiLanguageText Lang="zh-CN">罐体当前液位（单位：%，0~100）</MultiLanguageText>
+              </Comment>
+            </Member>
+            <Member Name="TargetLevel" Datatype="Real">
+              <AttributeList>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute>
+              </AttributeList>
+              <Comment>
+                <MultiLanguageText Lang="zh-CN">操作员设定的目标液位（HMI 可写）</MultiLanguageText>
+              </Comment>
+            </Member>
+            <Member Name="HighLimit" Datatype="Real">
+              <AttributeList>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute>
+              </AttributeList>
+              <Comment>
+                <MultiLanguageText Lang="zh-CN">高液位报警阈值，默认 90%</MultiLanguageText>
+              </Comment>
+            </Member>
+            <Member Name="LowLimit" Datatype="Real">
+              <AttributeList>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute>
+              </AttributeList>
+              <Comment>
+                <MultiLanguageText Lang="zh-CN">低液位报警阈值，默认 10%</MultiLanguageText>
+              </Comment>
+            </Member>
+            <Member Name="AlarmHigh" Datatype="Bool">
+              <AttributeList>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">false</BooleanAttribute>
+              </AttributeList>
+              <Comment>
+                <MultiLanguageText Lang="zh-CN">高液位报警标志（FC_Alarm 锁存）</MultiLanguageText>
+              </Comment>
+            </Member>
+            <Member Name="AlarmLow" Datatype="Bool">
+              <AttributeList>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">false</BooleanAttribute>
+              </AttributeList>
+              <Comment>
+                <MultiLanguageText Lang="zh-CN">低液位报警标志（FC_Alarm 锁存）</MultiLanguageText>
+              </Comment>
+            </Member>
+            <Member Name="CycleCount" Datatype="DInt">
+              <AttributeList>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">false</BooleanAttribute>
+              </AttributeList>
+              <Comment>
+                <MultiLanguageText Lang="zh-CN">运行启动累计次数</MultiLanguageText>
+              </Comment>
+            </Member>
+          </Section>
+        </Sections>
+      </Interface>
+      <Name>UDT_TankStatus</Name>
+      <Namespace />
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>zh-CN</Culture>
+              <Text>液位控制系统数据类型：罐体测量值、目标液位、上下限阈值、报警标志、运行计数。
+通常实例化为全局 DB_TankStatus 供 FC_LevelControl / FC_Alarm 等读写。</Text>
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <MultilingualText ID="3" CompositionName="Title">
+        <ObjectList>
+          <MultilingualTextItem ID="4" CompositionName="Items">
+            <AttributeList>
+              <Culture>zh-CN</Culture>
+              <Text>液位控制系统数据结构</Text>
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+    </ObjectList>
+  </SW.Types.PlcStruct>
+</Document>

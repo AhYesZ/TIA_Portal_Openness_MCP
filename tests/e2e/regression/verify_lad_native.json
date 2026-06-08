@@ -1,0 +1,58 @@
+﻿[
+    {
+        "category":  "L1-Portal",
+        "tool":  "Connect",
+        "status":  "pass",
+        "elapsedMs":  936,
+        "detail":  "{\"message\":\"Connected to TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:29:34.9241983+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "GetProject",
+        "status":  "pass",
+        "elapsedMs":  100,
+        "detail":  "{\"items\":[{\"name\":\"\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\",\"attributes\":[{\"name\":\"Author\",\"value\":\"XL626\",\"accessMode\":\"Read\"},{\"name\":\"Copyright\",\"value\":\"\",\"accessMode\":\"Read\"},{\"name\":\"CreationTime\",\"value\":\"2026-01-26T08:25:42.4773471Z\",\"accessMode"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "AttachToOpenProject",
+        "status":  "pass",
+        "elapsedMs":  66,
+        "detail":  "{\"message\":\"Attached to open project \\u0027\\u6C5F\\u590F\\u6D4B\\u8BD5\\u9879\\u76EEV21-260511\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:29:35.2164219+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "ImportBlock(MCPVerify_FC_LAD.xml LAD native)",
+        "status":  "pass",
+        "elapsedMs":  2320,
+        "detail":  "{\"message\":\"Block imported from \\u0027C:\\\\Users\\\\XL626\\\\Desktop\\\\testtia\\\\lad_native_verify\\\\MCPVerify_FC_LAD.xml\\u0027 to \\u0027\\u0027\",\"meta\":{\"timestamp\":\"2026-05-11T11:29:37.5376393+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "GetBlocks(post-import)",
+        "status":  "pass",
+        "elapsedMs":  609,
+        "detail":  "{\"items\":[{\"typeName\":\"OB\",\"name\":\"Main\",\"namespace\":\"\",\"programmingLanguage\":\"LAD\",\"memoryLayout\":\"Optimized\",\"isConsistent\":true,\"headerName\":\"\",\"modifiedDate\":\"2026-04-07T06:27:36.0345306Z\",\"isKnowHowProtected\":false,\"description\":\"Siemens.Engineering.SW.Bl"
+    },
+    {
+        "category":  "L1-PLC",
+        "tool":  "CompileSoftware(after LAD import)",
+        "status":  "pass",
+        "elapsedMs":  1134,
+        "detail":  "{\"state\":\"Warning\",\"errorCount\":0,\"warningCount\":12,\"messages\":[\"State=Warning; Path=\\u5B89\\u5168PLC\",\"State=Warning; Description=Compiling finished (errors: 0; warnings: 12)\"],\"message\":\"Software \\u0027\\u5B89\\u5168PLC\\u0027 compiled. State=Warning Errors=0 Wa"
+    },
+    {
+        "category":  "L1-Project",
+        "tool":  "SaveProject",
+        "status":  "pass",
+        "elapsedMs":  185,
+        "detail":  "{\"message\":\"Local project saved\",\"meta\":{\"timestamp\":\"2026-05-11T11:29:39.4813444+08:00\",\"success\":true}}"
+    },
+    {
+        "category":  "L1-Portal",
+        "tool":  "Disconnect",
+        "status":  "pass",
+        "elapsedMs":  43,
+        "detail":  "{\"message\":\"Disconnected from TIA-Portal\",\"meta\":{\"timestamp\":\"2026-05-11T11:29:39.5270812+08:00\",\"success\":true}}"
+    }
+]

@@ -1,0 +1,36 @@
+# IDE / agent state
+.vs/
+.gemini
+.claude
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# .NET build artifacts
+bin/
+bin-v20/
+obj/
+TestResults/
+*.pdb
+*.dll.config
+
+# Distribution / packaged outputs
+dist/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Logs / scratch
+*.log
+*.tmp
+*~
+
+# OS noise
+Thumbs.db
+ehthumbs.db
+.DS_Store
+desktop.ini
