@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.2.0] - 2026-06-09 - 在线监控扩展（趋势采样 / 实时因果溯源 / RUN-STOP 状态）
+
+延续 v2.1.0 的运行时只读通道，新增 3 个工具（全部 `[L2]`，纯只读），工具数 186→189：
+
+- **`SamplePlcLiveValuesS7`** — S7 趋势采样：单连接对一组绝对地址按 `intervalMs` 采样至 `durationMs`（封顶 120s / 5000 点），返回每个信号的时间序列 + min/max/avg。**直接用于抓 PID 阶跃响应曲线**。调用会阻塞 ~durationMs。
+- **`TraceTagCauseLive`** — 实时因果溯源：先跑离线 `TraceTagCause` 找写入网络+门控条件，再把门控操作数**经 PLC 变量表解析成绝对地址**并 S7 实时读，告诉你**此刻是哪个互锁/条件在驱动**。DB 成员/优化/符号量无绝对地址→标 unresolved（改用 OPC UA 符号读）。
+- **`GetPlcRunStateS7`** — 读 CPU 运行模式 RUN/STOP/UNKNOWN（**Openness 做不到**），附 CPU 时钟 + 尽力读诊断缓冲原始条目（事件ID hex + 原始字节；完整事件文本需 TIA 文本库，部分 S7-1200 的 SZL 不可用时干净报错）。
+- 三者均纯只读（不写/不强制/不改运行模式），响应带 `safety` 自证。
+- `tool-capability-matrix.md` 生成脚本修正为扫描全部 `McpServer*.cs` 分部文件（含 `McpServer.Runtime.cs`），矩阵=189。
+- 13 项确定性单测覆盖地址解析（`TiaTagToSpec`）与诊断缓冲解析（`ParseSzlDiagRecords`）等纯逻辑；双构建 V20/V21 均 0 错，runtime tools/list 实测 189。真机端到端验证待现场放行 PLC。
+
 ## [2.1.0] - 2026-06-09 - 在线只读实时读值（S7 / OPC UA / 监控表 / 离线溯因）
 
 TIA Openness 是工程接口，**读不到运行中 CPU 的实时值**。本版新增一条独立于 Openness 的**运行时只读通道**，直连 CPU 读实时值。新增 5 个工具（全部 `[L2]`，**纯只读：不写、不强制、不改运行模式**），工具数 181→186。

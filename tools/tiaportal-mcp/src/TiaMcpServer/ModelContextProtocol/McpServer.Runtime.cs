@@ -159,6 +159,73 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "SamplePlcLiveValuesS7"), Description("[L2][Online-Monitoring] Read-only TREND sampling over the S7 protocol (port 102): on one open connection, read a set of absolute S7 addresses every intervalMs for up to durationMs (hard-capped at 120 s / 5000 samples), returning a time series per address plus min/max/avg of the numeric ones. Ideal for capturing a PID step response or watching a signal move over time. NEVER writes/forces. The call BLOCKS for ~durationMs while it samples. Same address syntax and identity guard as ReadPlcLiveValuesS7.")]
+        public static ResponseJsonReport SamplePlcLiveValuesS7(
+            [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
+            [Description("itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. [\"DB10.DBD0:REAL\",\"M0.0\"].")] string itemsJson,
+            [Description("intervalMs: sampling period in ms (clamped to >= 20).")] int intervalMs = 100,
+            [Description("durationMs: total sampling window in ms (clamped to <= 120000).")] int durationMs = 5000,
+            [Description("maxSamples: hard cap on sample count (default 600, max 5000).")] int maxSamples = 600,
+            [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
+            [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
+            [Description("expectModuleContains: optional identity guard substring (e.g. '1211C').")] string expectModuleContains = "")
+        {
+            try
+            {
+                var specs = ParseItemSpecs(itemsJson);
+                if (specs.Count == 0)
+                    return new ResponseJsonReport { Ok = false, Message = "No addresses supplied in itemsJson." };
+
+                var r = S7LiveReader.SampleItems(ip, rack, slot, specs, intervalMs, durationMs, maxSamples,
+                    string.IsNullOrWhiteSpace(expectModuleContains) ? null : expectModuleContains);
+
+                var series = new JsonArray();
+                foreach (var s in r.Series)
+                {
+                    var o = new JsonObject { ["spec"] = s.Spec, ["area"] = s.Area, ["type"] = s.Type };
+                    if (s.Area == "DB") o["db"] = s.Db;
+                    if (s.Error != null) o["error"] = s.Error;
+                    else
+                    {
+                        var vals = new JsonArray();
+                        foreach (var v in s.Values) vals.Add(v == null ? null : JsonValue.Create(v));
+                        o["values"] = vals;
+                        if (s.Min != null) { o["min"] = s.Min; o["max"] = s.Max; o["avg"] = s.Avg; }
+                    }
+                    series.Add(o);
+                }
+                var tsArr = new JsonArray();
+                foreach (var t in r.TimestampsMs) tsArr.Add(t);
+
+                var data = new JsonObject
+                {
+                    ["ip"] = ip,
+                    ["channel"] = "S7 / ISO-on-TCP (read-only trend)",
+                    ["sampleCount"] = r.SampleCount,
+                    ["requestedIntervalMs"] = r.RequestedIntervalMs,
+                    ["actualElapsedMs"] = r.ActualElapsedMs,
+                    ["identityConfirmed"] = r.IdentityConfirmed,
+                    ["timestampsMs"] = tsArr,
+                    ["series"] = series,
+                    ["safety"] = new JsonObject { ["readOnly"] = true, ["writesValues"] = false, ["usesForce"] = false, ["changesCpuMode"] = false }
+                };
+                if (r.Error != null) data["error"] = r.Error;
+
+                bool ok = r.Ok && r.Error == null && r.Series.All(s => s.Error == null);
+                return new ResponseJsonReport
+                {
+                    Ok = ok,
+                    Message = r.Error ?? $"Sampled {r.Series.Count} signal(s) x {r.SampleCount} samples over {r.ActualElapsedMs} ms from {ip}.",
+                    Data = data,
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"S7 trend sampling failed: {ex.Message}", ex, McpErrorCode.InternalError);
+            }
+        }
+
         [McpServerTool(Name = "TraceTagCause"), Description("[L2][Online-Monitoring] Answer 'why is tag X this value / what sets it' by static analysis of the OFFLINE project. Read-only: exports code blocks to SimaticML and finds every network that WRITES the tag (LAD coils S/R/=, or StructuredText ':=' assignments) plus the gating condition operands in those networks. Cross-reference service is not needed. Then live-read the returned gatingConditions with ReadPlcLiveValuesS7 to see which condition is currently driving the value. Tip: pass blockScope to limit which blocks are scanned (faster).")]
         public static ResponseJsonReport TraceTagCause(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. '安全PLC'.")] string softwarePath,
@@ -174,6 +241,28 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is not McpException)
             {
                 throw new McpException($"TraceTagCause failed: {ex.Message}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        [McpServerTool(Name = "TraceTagCauseLive"), Description("[L2][Online-Monitoring] Live causal trace: runs the offline TraceTagCause to find what writes a tag and its gating conditions, then resolves each gating operand to an absolute address via the PLC tag table and LIVE-READS the resolvable ones over S7 (port 102) — so you see which interlock/condition is currently TRUE and driving the value. Read-only. Operands that are DB members / optimized / symbolic have no absolute PLC-tag address and are returned unresolved (read those via OPC UA). Requires the CPU ip; for the offline-only trace use TraceTagCause.")]
+        public static ResponseJsonReport TraceTagCauseLive(
+            [Description("softwarePath: PLC software path from GetProjectTree, e.g. '安全PLC'.")] string softwarePath,
+            [Description("tag: symbol to trace (full path or member name; quotes/whitespace ignored).")] string tag,
+            [Description("ip: CPU IP address for the live read, e.g. '192.168.0.32'.")] string ip,
+            [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
+            [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
+            [Description("blockScope: optional regex to limit scanned code blocks by name. Empty scans all.")] string blockScope = "",
+            [Description("expectModuleContains: optional identity guard substring (e.g. '1211C').")] string expectModuleContains = "")
+        {
+            try
+            {
+                var result = Portal.TraceTagCauseLive(softwarePath, tag, ip, rack, slot, blockScope, expectModuleContains);
+                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
+                return result;
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"TraceTagCauseLive failed: {ex.Message}", ex, McpErrorCode.InternalError);
             }
         }
 
@@ -225,6 +314,54 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is not McpException)
             {
                 throw new McpException($"OPC UA live read failed: {ex.Message}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        [McpServerTool(Name = "GetPlcRunStateS7"), Description("[L2][Online-Monitoring] Read-only: read the CPU operating mode (RUN / STOP / UNKNOWN) over the S7 protocol (port 102) — something TIA Openness cannot do. Also returns the CPU clock and a best-effort raw diagnostic-buffer dump (event IDs in hex + raw bytes; full event text needs TIA's text database, and SZL may be unavailable on some S7-1200 CPUs — reported cleanly). Never writes/forces/changes mode.")]
+        public static ResponseJsonReport GetPlcRunStateS7(
+            [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
+            [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
+            [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
+            [Description("maxDiagEntries: max diagnostic-buffer records to return (default 20; 0 = all returned by CPU).")] int maxDiagEntries = 20,
+            [Description("expectModuleContains: optional identity guard substring (e.g. '1211C').")] string expectModuleContains = "")
+        {
+            try
+            {
+                var r = S7LiveReader.ReadRunState(ip, rack, slot, maxDiagEntries,
+                    string.IsNullOrWhiteSpace(expectModuleContains) ? null : expectModuleContains);
+
+                var diag = new JsonArray();
+                foreach (var e in r.DiagEntries)
+                    diag.Add(new JsonObject { ["index"] = e.Index, ["eventId"] = e.EventId, ["raw"] = e.Raw });
+
+                var data = new JsonObject
+                {
+                    ["ip"] = ip,
+                    ["channel"] = "S7 / ISO-on-TCP (read-only)",
+                    ["runState"] = r.Status,
+                    ["plcDateTime"] = r.PlcDateTime,
+                    ["moduleTypeName"] = r.Identity.ModuleTypeName,
+                    ["szlError"] = r.Identity.SzlError,
+                    ["diagnosticRecordCount"] = r.DiagRecordCount,
+                    ["diagnosticEntries"] = diag,
+                    ["diagnosticNote"] = r.DiagNote,
+                    ["elapsedMs"] = r.ElapsedMs,
+                    ["safety"] = new JsonObject { ["readOnly"] = true, ["writesValues"] = false, ["usesForce"] = false, ["changesCpuMode"] = false }
+                };
+                if (r.Error != null) data["error"] = r.Error;
+
+                bool ok = r.Connected && r.Error == null;
+                return new ResponseJsonReport
+                {
+                    Ok = ok,
+                    Message = r.Error ?? $"CPU at {ip} is {r.Status}" + (r.DiagRecordCount > 0 ? $"; {r.DiagRecordCount} diagnostic record(s)." : "."),
+                    Data = data,
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"GetPlcRunStateS7 failed: {ex.Message}", ex, McpErrorCode.InternalError);
             }
         }
 

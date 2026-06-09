@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using Sharp7;
 
@@ -47,6 +48,55 @@ namespace TiaMcpServer.Runtime
         public bool IdentityConfirmed;
         public S7CpuIdentity Identity = new S7CpuIdentity();
         public List<S7ReadItem> Items = new List<S7ReadItem>();
+        public long ElapsedMs;
+    }
+
+    // One sampled signal over the whole trend window.
+    public sealed class S7SampleSeries
+    {
+        public string Spec = "";
+        public string Area = "";
+        public int Db;
+        public int ByteOffset;
+        public int BitOffset;
+        public string Type = "";
+        public List<object?> Values = new List<object?>();   // one entry per sample; null = that sample failed
+        public string? Error;                                 // parse error -> whole series invalid, not sampled
+        public double? Min;
+        public double? Max;
+        public double? Avg;
+    }
+
+    public sealed class S7SampleResult
+    {
+        public bool Ok;
+        public string? Error;
+        public bool IdentityConfirmed;
+        public S7CpuIdentity Identity = new S7CpuIdentity();
+        public List<long> TimestampsMs = new List<long>();    // ms offset from first sample
+        public int SampleCount;
+        public int RequestedIntervalMs;
+        public long ActualElapsedMs;
+        public List<S7SampleSeries> Series = new List<S7SampleSeries>();
+    }
+
+    public sealed class S7DiagEntry
+    {
+        public int Index;
+        public string EventId = "";   // first 2 bytes, hex (Siemens event id; text needs TIA's text DB)
+        public string Raw = "";       // full record bytes, hex
+    }
+
+    public sealed class S7RunState
+    {
+        public bool Connected;
+        public string Status = "UNKNOWN";   // RUN / STOP / UNKNOWN
+        public S7CpuIdentity Identity = new S7CpuIdentity();
+        public string? PlcDateTime;
+        public int DiagRecordCount;
+        public List<S7DiagEntry> DiagEntries = new List<S7DiagEntry>();
+        public string? DiagNote;            // why the diagnostic buffer was not parsed (best-effort)
+        public string? Error;
         public long ElapsedMs;
     }
 
@@ -174,6 +224,225 @@ namespace TiaMcpServer.Runtime
                 sw.Stop();
                 result.ElapsedMs = sw.ElapsedMilliseconds;
             }
+        }
+
+        // Hard bounds so a sampling request can never block forever or return an
+        // unbounded payload. A call blocks for up to durationMs while it samples.
+        public const int MinIntervalMs = 20;
+        public const int MaxDurationMs = 120000;     // 2 minutes
+        public const int MaxSamplesCap = 5000;
+
+        // Sample a set of addresses on a single open S7 connection: at each interval,
+        // read every address once and record the value, until durationMs elapses or
+        // maxSamples is reached. Returns a time series per address plus min/max/avg of
+        // the numeric ones (handy for PID step-response capture). Read-only.
+        public static S7SampleResult SampleItems(string ip, int rack, int slot, IEnumerable<string> specs,
+            int intervalMs, int durationMs, int maxSamples, string? expectModuleContains)
+        {
+            var result = new S7SampleResult();
+            if (intervalMs < MinIntervalMs) intervalMs = MinIntervalMs;
+            if (durationMs <= 0 || durationMs > MaxDurationMs) durationMs = MaxDurationMs;
+            if (maxSamples <= 0) maxSamples = 600;
+            if (maxSamples > MaxSamplesCap) maxSamples = MaxSamplesCap;
+            result.RequestedIntervalMs = intervalMs;
+
+            // Parse every spec once; keep one template item per series for the loop.
+            var templates = new List<S7ReadItem>();
+            foreach (var spec in specs)
+            {
+                var t = ParseSpec(spec);
+                var series = new S7SampleSeries
+                {
+                    Spec = t.Spec, Area = t.Area, Db = t.Db,
+                    ByteOffset = t.ByteOffset, BitOffset = t.BitOffset, Type = t.Type,
+                    Error = t.Error
+                };
+                result.Series.Add(series);
+                templates.Add(t);
+            }
+            if (result.Series.Count == 0) { result.Error = "No addresses supplied."; return result; }
+
+            var client = new S7Client();
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                int res = client.ConnectTo(ip, rack, slot);
+                if (res != 0)
+                {
+                    result.Error = $"Connect to {ip} (rack {rack}, slot {slot}) failed: {client.ErrorText(res)}";
+                    return result;
+                }
+                result.Identity.Connected = true;
+                result.Identity.PduLength = client.NegotiatedPduLength();
+
+                var info = new S7Client.S7CpuInfo();
+                if (client.GetCpuInfo(ref info) == 0)
+                {
+                    result.Identity.ModuleTypeName = (info.ModuleTypeName ?? "").Trim();
+                    result.Identity.AsName = (info.ASName ?? "").Trim();
+                    result.Identity.ModuleName = (info.ModuleName ?? "").Trim();
+                    result.Identity.SerialNumber = (info.SerialNumber ?? "").Trim();
+                }
+                else result.Identity.SzlError = "GetCpuInfo unavailable (common on S7-1200)";
+
+                if (!string.IsNullOrWhiteSpace(expectModuleContains))
+                {
+                    if (!string.IsNullOrWhiteSpace(result.Identity.ModuleTypeName))
+                    {
+                        if (result.Identity.ModuleTypeName.IndexOf(expectModuleContains!, StringComparison.OrdinalIgnoreCase) < 0)
+                        {
+                            result.Error = $"Identity guard tripped: CPU at {ip} reports module '{result.Identity.ModuleTypeName}', " +
+                                           $"which does not contain expected '{expectModuleContains}'. Aborted before sampling.";
+                            return result;
+                        }
+                        result.IdentityConfirmed = true;
+                    }
+                }
+
+                long nextTick = 0;
+                while (sw.ElapsedMilliseconds < durationMs && result.SampleCount < maxSamples)
+                {
+                    long t0 = sw.ElapsedMilliseconds;
+                    result.TimestampsMs.Add(t0);
+                    for (int i = 0; i < templates.Count; i++)
+                    {
+                        var tpl = templates[i];
+                        if (tpl.Error != null) { result.Series[i].Values.Add(null); continue; }
+                        ReadOne(client, tpl);                 // overwrites tpl.Value / tpl.Error
+                        result.Series[i].Values.Add(tpl.Error == null ? tpl.Value : null);
+                    }
+                    result.SampleCount++;
+
+                    nextTick += intervalMs;
+                    long remaining = nextTick - sw.ElapsedMilliseconds;
+                    if (remaining > 0) System.Threading.Thread.Sleep((int)remaining);
+                }
+
+                foreach (var s in result.Series) Aggregate(s);
+                result.Ok = true;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+                return result;
+            }
+            finally
+            {
+                try { client.Disconnect(); } catch { }
+                sw.Stop();
+                result.ActualElapsedMs = sw.ElapsedMilliseconds;
+            }
+        }
+
+        private static void Aggregate(S7SampleSeries s)
+        {
+            double min = double.MaxValue, max = double.MinValue, sum = 0; int n = 0;
+            foreach (var v in s.Values)
+            {
+                if (v == null) continue;
+                double d;
+                if (v is bool b) d = b ? 1 : 0;
+                else if (v is IConvertible) { try { d = Convert.ToDouble(v, CultureInfo.InvariantCulture); } catch { continue; } }
+                else continue;
+                if (d < min) min = d;
+                if (d > max) max = d;
+                sum += d; n++;
+            }
+            if (n > 0) { s.Min = min; s.Max = max; s.Avg = Math.Round(sum / n, 6); }
+        }
+
+        // Snap7/S7 operating-mode codes (not exposed as named constants by Sharp7).
+        private const int S7StatusUnknown = 0x00;
+        private const int S7StatusStop = 0x04;
+        private const int S7StatusRun = 0x08;
+        private const int SzlDiagnosticBuffer = 0x00A0;   // diagnostic buffer SZL id
+
+        // Read CPU operating mode (RUN/STOP) over S7 — something TIA Openness cannot do.
+        // Also best-effort reads the CPU clock and diagnostic buffer (raw entries only;
+        // full event text needs TIA's text database). Read-only.
+        public static S7RunState ReadRunState(string ip, int rack, int slot, int maxDiagEntries, string? expectModuleContains)
+        {
+            var state = new S7RunState();
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var client = new S7Client();
+            try
+            {
+                int res = client.ConnectTo(ip, rack, slot);
+                if (res != 0) { state.Error = $"Connect to {ip} (rack {rack}, slot {slot}) failed: {client.ErrorText(res)}"; return state; }
+                state.Connected = true;
+                state.Identity.Connected = true;
+                state.Identity.PduLength = client.NegotiatedPduLength();
+
+                var info = new S7Client.S7CpuInfo();
+                if (client.GetCpuInfo(ref info) == 0)
+                {
+                    state.Identity.ModuleTypeName = (info.ModuleTypeName ?? "").Trim();
+                    state.Identity.AsName = (info.ASName ?? "").Trim();
+                    state.Identity.ModuleName = (info.ModuleName ?? "").Trim();
+                    state.Identity.SerialNumber = (info.SerialNumber ?? "").Trim();
+                }
+                else state.Identity.SzlError = "GetCpuInfo unavailable (common on S7-1200)";
+
+                if (!string.IsNullOrWhiteSpace(expectModuleContains) && !string.IsNullOrWhiteSpace(state.Identity.ModuleTypeName)
+                    && state.Identity.ModuleTypeName.IndexOf(expectModuleContains!, StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    state.Error = $"Identity guard tripped: CPU at {ip} reports module '{state.Identity.ModuleTypeName}', " +
+                                  $"which does not contain expected '{expectModuleContains}'.";
+                    return state;
+                }
+
+                int status = 0;
+                int rcStatus = client.PlcGetStatus(ref status);
+                state.Status = rcStatus != 0 ? "UNKNOWN"
+                    : status == S7StatusRun ? "RUN"
+                    : status == S7StatusStop ? "STOP"
+                    : status == S7StatusUnknown ? "UNKNOWN"
+                    : $"OTHER(0x{status:X2})";
+
+                try { var dt = new DateTime(); if (client.GetPlcDateTime(ref dt) == 0) state.PlcDateTime = dt.ToString("O"); } catch { }
+
+                // Best-effort diagnostic buffer (raw). Wrapped: any failure -> clean note.
+                try
+                {
+                    var szl = new S7Client.S7SZL();
+                    szl.Data = new byte[4096];
+                    int size = szl.Data.Length;
+                    int rcSzl = client.ReadSZL(SzlDiagnosticBuffer, 0x0000, ref szl, ref size);
+                    if (rcSzl == 0)
+                    {
+                        state.DiagRecordCount = szl.Header.N_DR;
+                        state.DiagEntries = ParseSzlDiagRecords(szl.Data, szl.Header.LENTHDR, szl.Header.N_DR, maxDiagEntries);
+                        if (state.DiagEntries.Count > 0)
+                            state.DiagNote = "Raw diagnostic-buffer records (newest first as returned by the CPU). Event IDs are hex; full event text requires TIA's text database.";
+                    }
+                    else state.DiagNote = $"Diagnostic buffer not available over SZL on this CPU ({client.ErrorText(rcSzl)}). RUN/STOP above is still valid.";
+                }
+                catch (Exception ex) { state.DiagNote = "Diagnostic buffer read skipped: " + ex.Message; }
+
+                return state;
+            }
+            catch (Exception ex) { state.Error = ex.Message; return state; }
+            finally { try { client.Disconnect(); } catch { } sw.Stop(); state.ElapsedMs = sw.ElapsedMilliseconds; }
+        }
+
+        // Pure parser for SZL diagnostic records: split Data into fixed-length records,
+        // extract the 2-byte event id (big-endian) + the raw bytes of each. Testable.
+        public static List<S7DiagEntry> ParseSzlDiagRecords(byte[] data, int recordLen, int count, int maxEntries)
+        {
+            var list = new List<S7DiagEntry>();
+            if (data == null || recordLen <= 0 || count <= 0) return list;
+            int n = maxEntries > 0 ? Math.Min(count, maxEntries) : count;
+            for (int i = 0; i < n; i++)
+            {
+                int off = i * recordLen;
+                if (off + recordLen > data.Length) break;
+                string eventId = recordLen >= 2 ? ((data[off] << 8) | data[off + 1]).ToString("X4") : "";
+                var sb = new StringBuilder(recordLen * 3);
+                for (int k = 0; k < recordLen; k++) { if (k > 0) sb.Append(' '); sb.Append(data[off + k].ToString("X2")); }
+                list.Add(new S7DiagEntry { Index = i, EventId = eventId, Raw = sb.ToString() });
+            }
+            return list;
         }
 
         private static void ReadOne(S7Client client, S7ReadItem item)
@@ -348,6 +617,49 @@ namespace TiaMcpServer.Runtime
                 if (probe.Type == "BYTE") return a + ":SINT";
             }
             return a;
+        }
+
+        // Convert a PLC tag's absolute LogicalAddress + TIA DataTypeName to an S7 read
+        // spec. "%I0.0"+"Bool" -> "I0.0"; "%MW20"+"Int" -> "MW20:INT"; "%MD12"+"Real"
+        // -> "MD12:REAL". Returns null for symbolic/non-absolute addresses or a
+        // type/address mismatch (e.g. a numeric type on a bit address).
+        public static string? TiaTagToSpec(string? logicalAddress, string? dataType)
+        {
+            if (string.IsNullOrWhiteSpace(logicalAddress)) return null;
+            string a = logicalAddress!.Trim();
+            if (!a.StartsWith("%")) return null;
+            a = a.Substring(1).Trim();
+
+            var probe = ParseSpec(a);
+            if (probe.Error != null) return null;
+
+            string? t = MapTiaDataType(dataType);
+            if (t == null) return a;                                  // unknown type -> default decode
+            if (t == "BOOL") return probe.Type == "BOOL" ? a : null;  // bool only on a bit address
+            if (probe.Type == "BOOL") return null;                    // numeric type on a bit address -> invalid
+
+            var withType = ParseSpec(a + ":" + t);
+            return withType.Error == null ? a + ":" + t : a;          // fall back to default decode on size mismatch
+        }
+
+        private static string? MapTiaDataType(string? dataType)
+        {
+            if (string.IsNullOrWhiteSpace(dataType)) return null;
+            switch (dataType!.Trim().ToUpperInvariant())
+            {
+                case "BOOL": return "BOOL";
+                case "BYTE": return "BYTE";
+                case "SINT": return "SINT";
+                case "USINT": return "USINT";
+                case "INT": return "INT";
+                case "UINT": return "UINT";
+                case "WORD": return "WORD";
+                case "DINT": return "DINT";
+                case "UDINT": return "UDINT";
+                case "DWORD": return "DWORD";
+                case "REAL": return "REAL";
+                default: return null;                                 // TIME/STRING/struct/etc -> not an S7 scalar read
+            }
         }
 
         private static string DefaultTypeForSize(string sz)
