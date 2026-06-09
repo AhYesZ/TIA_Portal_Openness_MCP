@@ -50,6 +50,7 @@ namespace TiaMcpServer.Siemens
             var writeSites = new JsonArray();
             var readSites = new JsonArray();
             var allConditions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int analyzedOk = 0;
 
             try
             {
@@ -68,6 +69,7 @@ namespace TiaMcpServer.Siemens
                     catch (Exception ex) { warnings.Add($"Parse failed for '{blockName}': {ex.Message}"); continue; }
 
                     CausalTraceParser.AnalyzeBlock(doc, blockName, blockPath, normTag, tag, writeSites, readSites, allConditions);
+                    analyzedOk++;
                 }
             }
             finally
@@ -78,10 +80,18 @@ namespace TiaMcpServer.Siemens
             data["writeSites"] = writeSites;
             data["readSites"] = readSites;
             data["gatingConditions"] = new JsonArray(allConditions.OrderBy(x => x).Select(x => JsonValue.Create(x)).ToArray());
+            data["analyzedBlockCount"] = analyzedOk;
             if (warnings.Count > 0) data["warnings"] = warnings;
 
             string summary;
-            if (writeSites.Count == 0)
+            if (codeBlocks.Count > 0 && analyzedOk == 0)
+            {
+                bool onlineMode = warnings.Any(w => w!.ToString().IndexOf("online mode", StringComparison.OrdinalIgnoreCase) >= 0);
+                summary = onlineMode
+                    ? "INCONCLUSIVE: no block could be exported because TIA is connected ONLINE to the PLC (Openness cannot export blocks in online mode). Go offline in TIA (Online ▸ Go offline) — the project stays open and the S7 live-read is a separate direct connection — then retry."
+                    : $"INCONCLUSIVE: none of {codeBlocks.Count} code block(s) could be exported/parsed (see warnings); no trace was performed.";
+            }
+            else if (writeSites.Count == 0)
                 summary = $"No block writes '{tag}'. It may be set by HMI, an instruction's output, an indirect/optimized access this parser does not resolve, or the name differs from the project symbol.";
             else
                 summary = $"'{tag}' is written at {writeSites.Count} site(s). {allConditions.Count} distinct gating condition operand(s) found. " +

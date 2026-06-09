@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.2.1] - 2026-06-09 - v2.2.0 三工具真机验证 + 因果溯源在线模式消息修复
+
+v2.2.0 的 3 个在线监控工具已在真机（CPU 1211C @ 192.168.0.32）端到端验证通过：
+
+- **`GetPlcRunStateS7`** — 读到 `RUN`；该 1211C 的 SZL 诊断缓冲不可用时按设计干净降级（仍给出 RUN/STOP）。
+- **`SamplePlcLiveValuesS7`** — 采样 DB34 心跳/标志，确认时间序列与 min/max/avg 正确（心跳随时间递增）。
+- **`TraceTagCauseLive`** — 离线追溯 `EMG_STOP`，正确命中其在 `Crane_Communication` 网络4 的赋值及两个门控条件，并正确判定门控操作数为 DB 成员（无绝对地址→提示用 OPC UA 读）。
+
+**修复（`TraceTagCause` / `TraceTagCauseLive`）：** 当 TIA 与 PLC **在线连接**时，Openness 无法导出块（`Export ... not supported in online mode`）。此前所有块导出失败仍报 `No block writes 'X'`，会误导为“解析后无写入”。现新增 `analyzedBlockCount`，当无任何块成功导出时给出 `INCONCLUSIVE` 并提示“在 TIA 转至离线后重试（S7 实时读为独立直连，不受影响）”。两工具 Description 同步补充此前置条件。工具数不变（189）。
+
 ## [2.2.0] - 2026-06-09 - 在线监控扩展（趋势采样 / 实时因果溯源 / RUN-STOP 状态）
 
 延续 v2.1.0 的运行时只读通道，新增 3 个工具（全部 `[L2]`，纯只读），工具数 186→189：
