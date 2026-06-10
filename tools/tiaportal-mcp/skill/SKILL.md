@@ -475,7 +475,9 @@ There is **no MCP tool that builds contact/coil/compare FlgNet XML** (`LadNetwor
 
 ### 9a. LAD via S7DCL (PREFERRED, verified V21 round-trip)
 
-**MANDATORY — follow these steps in order. Do NOT skip any step. Do NOT hand-write .s7dcl text from memory — always load the reference first.**
+**MANDATORY — follow these steps in order. Do NOT skip any step. Do NOT hand-write .s7dcl text — hand-written files cause 13+ import errors (verified 2026-06-10). Always use the tool pipeline.**
+
+> Claude Code testing (2026-06-10): hand-writing .s7dcl directly produced 13 import errors on first try — wrong template names (`SrcType` vs `value_type`), unsupported instructions (JMP/LABEL/RET), missing pins (P_Contact bit), CMP template conflicts. Using BuildS7dclLadBlock + ValidateS7dclDocuments would have caught all of these before TIA import.
 
 **0) 必须先加载的知识源（每次 LAD 工作时都要做）：**
 - 读文件 `tools/tiaportal-mcp/skill/s7dcl-lad-reference.md` — 495 行完整语法，覆盖 99 条指令
@@ -921,10 +923,11 @@ that is **not** evidence that the import pipeline is wrong.
    `errors=0` (warnings allowed) and `SaveProject` returning success.
 5. **Always** quote Description tags exactly when filtering tools by layer
    (`[L0]`, `[L1]`, `[L2]`).
-6. **For ladder, author S7DCL text (`.s7dcl` + `.s7res`, both UTF-8 *with* BOM)
-   and import with `ImportBlocksFromDocuments`** (§9a). Do **not** hand-write FlgNet XML
-   for contacts/coils/compare/math — the only XML LAD builder
-   (`ComposePlcLadFcBlockXml`) does FC-call networks only.
+6. **For ladder, NEVER hand-write .s7dcl text.** Always use the tool pipeline:
+   `BuildS7dclLadBlock` → `ValidateS7dclDocuments` (must pass errorCount=0) →
+   `ImportBlocksFromDocuments`. Hand-written .s7dcl causes import failures
+   (wrong template names, unsupported instructions, missing pins — see §9a).
+   Do **not** hand-write FlgNet XML either — `ComposePlcLadFcBlockXml` does FC-call networks only.
 
 If a step takes longer than 90 seconds with no output, stop. The most likely
 cause is an Openness authorization dialog the user did not click. Report it,
