@@ -2563,6 +2563,47 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "BuildS7dclLadBlock"), Description("[L1][PLC-Builders][Offline] PREFERRED tool for creating new LAD blocks. Generates a .s7dcl + .s7res file pair from structured JSON — far simpler than hand-writing S7DCL text. Writes UTF-8 BOM files to outputDirectory, ready for ImportBlocksFromDocuments/ImportFromDocuments. Supports FC, FB, OB blocks with series/parallel rungs, contacts, coils, ENO-boxes (Add/Move/Convert/Calculate), Q-boxes (S_RS/TON/Ctu), timers, counters, jumps — the full S7DCL instruction set. Use dryRun=true to validate JSON without writing files.\n\nJSON schema: {blockKind:'fc'|'fb'|'ob', blockName, blockNumber, comment?, inputs:[{n,t}], outputs:[{n,t}], statics:[{n,t}], networks:[{t,c?,e:[{i,o|p|tp|inst?}], b?:[[{i,o}]]}]}. Element keys: i=instruction name, o=single operand (contacts/coils), p=params object, tp=template pragma, inst=Q-box instance prefix, wire=wire label. Parallel OR: b=array of branch element arrays. Use ValidateS7dclDocuments after building to verify output.")]
+        public static ResponseJsonReport BuildS7dclLadBlock(
+            [Description("json: structured JSON describing the LAD block per schema above.")] string json,
+            [Description("outputDirectory: directory where .s7dcl + .s7res files will be written.")] string outputDirectory,
+            [Description("dryRun: true validates the JSON and returns the plan without writing files.")] bool dryRun = true)
+        {
+            try
+            {
+                if (dryRun)
+                {
+                    var root = JsonNode.Parse(json) as JsonObject;
+                    if (root == null) throw new ArgumentException("JSON root must be an object.");
+                    var blockName = root["blockName"]?.ToString() ?? root["n"]?.ToString() ?? "(unnamed)";
+                    var blockKind = root["blockKind"]?.ToString() ?? root["k"]?.ToString() ?? "fc";
+                    var networks = root["networks"]?.AsArray() ?? root["nw"]?.AsArray();
+                    var netCount = networks?.Count ?? 0;
+                    return new ResponseJsonReport
+                    {
+                        Ok = true,
+                        Message = $"S7DCL LAD block '{blockName}' ({blockKind}) JSON validated: {netCount} network(s) — dryRun only.",
+                        Data = new JsonObject { ["format"] = "tia-s7dcl-lad-build-dryrun-v1", ["blockKind"] = blockKind, ["blockName"] = blockName, ["networkCount"] = netCount },
+                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["dryRun"] = true }
+                    };
+                }
+                var data = S7dclLadBuilder.BuildFromJson(json, outputDirectory);
+                return new ResponseJsonReport
+                {
+                    Ok = true,
+                    Message = data["message"]?.ToString() ?? "S7DCL LAD block files written.",
+                    Data = data,
+                    OutputPath = outputDirectory,
+                    OutputFiles = data["outputFiles"]?.AsArray()?.Select(f => f!.ToString()).ToArray(),
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["offlineOnly"] = true, ["blockName"] = data["blockName"]?.ToString(), ["networkCount"] = data["networkCount"]?.GetValue<int>() ?? 0 }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Invalid S7DCL LAD builder input: {ex.Message}", ex, McpErrorCode.InvalidParams);
+            }
+        }
+
         [McpServerTool(Name = "ComposePlcFcBlockXml"), Description("[L2][PLC-Builders][Offline] Compose a TIA V21 SCL FC block XML from interface JSON and StructuredText content. Input: {blockName,blockNumber,inputs:[{name,datatype}],outputs:[{name,datatype}],structuredTextInnerXml? or structuredText:{operations:[]}}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects.")]
         public static ResponseXmlBuild ComposePlcFcBlockXml(
             [Description("fcBlockJson: JSON object with blockName/name, blockNumber/number, inputs[], outputs[], and structuredTextInnerXml or structuredText.operations[].")] string fcBlockJson)
