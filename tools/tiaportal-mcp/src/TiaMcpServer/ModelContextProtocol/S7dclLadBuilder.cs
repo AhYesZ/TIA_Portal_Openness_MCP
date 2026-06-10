@@ -120,7 +120,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         branchIdx++;
                         var branchElements = (branchNode as JsonArray) ?? new JsonArray();
-                        WriteRung(sb, branchElements, wireTarget: "w1", isFirst: false);
+                        WriteRung(sb, branchElements, wireLabel: null, wireTarget: "w1", isFirst: false);
                     }
                     _ = branchIdx; // suppress unused warning
                 }
