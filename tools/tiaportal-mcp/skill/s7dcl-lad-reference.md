@@ -103,6 +103,30 @@ END_ORGANIZATION_BLOCK
 
 ---
 
+## 二点五、模板（Template）分类速查 — 导入前必读！
+
+不同指令家族使用**不同的模板名称**。用错是导入失败的首要原因（Claude Code 实测 13 错误中 4 个源于此）。
+
+| 指令家族 | 模板名 | 示例 | 说明 |
+|----------|--------|------|------|
+| 四则运算 Add/Sub/Mul/Div/Mod | `SrcType` | `{ S7_Templates := "SrcType := Int" }` | TIA 接受 |
+| 比较触点 GT/LT/EQ/NE/GE/LE_Contact | `SrcType` | `{ S7_Templates := "SrcType := Int" }` | TIA 接受 |
+| IEC 定时器 TON/TOF/TP/TONR | `timeType` | `{ S7_Templates := "timeType := Time" }` | PDF Listing 29 |
+| IEC 计数器 Ctu/Ctd/Ctud | `countType` | `{ S7_Templates := "countType := DInt" }` | PDF Listing 30 |
+| Convert | Array | `{ S7_Templates := "[ inType := Int, outType := Real ]" }` | 两个模板 |
+| Calculate | `SrcType` | `{ S7_Templates := "SrcType := Real" }` | |
+| 选择器 MIN/MAX/LIMIT/SEL/MUX | `value_type` | `{ S7_Templates := "value_type := Int" }` | **⚠️ 不是 SrcType！** |
+| 字逻辑 AND/OR/XOR/INV | **不需要** | 不加模板 pragma | 类型自动推导 |
+| 移位 SHR/SHL/ROR/ROL | **不需要** | 不加模板 pragma | 同上 |
+| 传送 Move | **不需要** | 不加模板 pragma | 自动 |
+| CMP >= / <= / <> | **不需要** | 不加模板 pragma | 加模板反而报错！ |
+| JMP/LABEL/RET | — | **S7DCL 导入不支持** | TIA 直接拒绝 |
+| 取反 NEG | **不需要** | 不加模板 pragma | 引脚名是 `in` 不是 `in1` |
+
+> **根源**: PDF Listing 17 用 `SrcType`，Listing 22 用 `valueType`——官方文档自身不一致。上表来自 TIA V21 实际导入验证（2026-06-10）。
+
+---
+
 ## 三、指令全集（按官方案例逐条验证）
 
 > 格式说明: `Contact( x )` — 单操作数触点，操作数内联。多操作数指令分行列出所有参数。
@@ -113,14 +137,18 @@ END_ORGANIZATION_BLOCK
 |------|--------|------|------|
 | `Contact` | 1 | `out := in AND a` | `Contact( a )` |
 | `I_Contact` | 1 | `out := in AND NOT a` | `I_Contact( a )` |
-| `P_Contact` | 2 | 上升沿检测 | `P_Contact( operand:=sig, bit:=store )` |
-| `N_Contact` | 2 | 下降沿检测 | `N_Contact( operand:=sig, bit:=store )` |
+| `P_Contact` | 2 | 上升沿检测 | `P_Contact( operand:=sig, bit:=store )` **bit 必需** |
+| `N_Contact` | 2 | 下降沿检测 | `N_Contact( operand:=sig, bit:=store )` **bit 必需** |
 | `GT_Contact` | 2 | `in1 > in2` | `{SrcType:=Int} GT_Contact(in1:=#A, in2:=100)` |
 | `LT_Contact` | 2 | `in1 < in2` | `{SrcType:=Int} LT_Contact(in1:=#A, in2:=0)` |
 | `EQ_Contact` | 2 | `in1 == in2` | `{SrcType:=Int} EQ_Contact(in1:=#X, in2:=#Y)` |
 | `NE_Contact` | 2 | `in1 <> in2` | `{SrcType:=Int} NE_Contact(in1:=#X, in2:=0)` |
 | `GE_Contact` | 2 | `in1 >= in2` | `{SrcType:=Int} GE_Contact(in1:=#V, in2:=#Limit)` |
 | `LE_Contact` | 2 | `in1 <= in2` | `{SrcType:=Int} LE_Contact(in1:=#V, in2:=#Max)` |
+| `CMP >=` | 2 | `in1 >= in2` (box型) | `CMP >=( in1:=#A, in2:=#B )` — **不需要模板** |
+| `CMP <=` | 2 | `in1 <= in2` (box型) | `CMP <=( in1:=#A, in2:=#B )` — **不需要模板** |
+| `CMP <>` | 2 | `in1 <> in2` (box型) | `CMP <>( in1:=#A, in2:=#B )` — **不需要模板** |
+| `CMP ==` | 2 | `in1 == in2` (box型) | `CMP ==( in1:=#A, in2:=#B )` — **不需要模板** |
 | `IsValidContact` | 1 | 检查浮点有效性 | `IsValidContact( x )` |
 | `IsNotValidContact` | 1 | 检查浮点无效 | `IsNotValidContact( x )` |
 | `IsArrayContact` | 1 | 检查 Variant 是否含数组 | `IsArrayContact( x )` |
@@ -258,6 +286,12 @@ END_RUNG wire#w1
 ```
 `c.S_SR( wire#w1 )` 同理。第二个输入是主导的（Dominant）。
 
+> **TIA V21 导入确认**: 也可使用直接的 SR/RS Box 形式，引脚名为 `operand`（存储位）、`s`（置位）、`r`（复位）：
+> ```
+> SR( operand := #var, s := #set, r := #reset )
+> RS( operand := #var, s := #set, r := #reset )
+> ```
+
 #### IEC 定时器 (官方案例 Listing 29)
 ```
 { S7_Templates := "timeType := Time" }
@@ -300,7 +334,11 @@ S_Cud(
 ```
 Simatic 计数器用 BCD 编码预设值（`C#100`），输出 `cv` 为整数，`cv_bcd` 为 BCD 格式。`q` 输出 = `cv > 0`。
 
-### 3.6 跳转 & 标签
+### 3.6 跳转 & 标签 — ⚠️ S7DCL 导入不支持！
+
+> **TIA V21 验证 (2026-06-10)**: JMP/LABEL/RET 指令在 S7DCL 导入时被 TIA Portal 直接拒绝，报错 `mismatched input 'LABEL'` 和 `no viable alternative`。如需跳转逻辑，请在 TIA UI 中手动添加。
+
+以下语法仅存在于 SD 导出文件中，不可用于导入：
 
 #### Label (官方案例 Listing 31)
 ```
@@ -413,6 +451,13 @@ MultiLingualTexts:
 | 8 | **忘写 `S7_Language`** | 网络无效 | 每个 NETWORK 前加 pragma |
 | 9 | **猜测未知指令语法** | 导入报错 | `ExportBlocksAsDocuments` 导出真实语法 |
 | 10 | **wire# 放错位置** | EN 断连 | wire# 只用于并联分支 |
+| 11 | **MIN/MAX/LIMIT/SEL/MUX 用了 SrcType** | `Invalid Template Types` | 改为 `value_type`（见 §二点五） |
+| 12 | **字逻辑/移位/CMP 前加了模板 pragma** | `no viable alternative` | 去掉 `{ S7_Templates }` 行 |
+| 13 | **P_Contact/N_Contact 没写 bit 引脚** | `Pin 'bit' connection is missing` | 写 `P_Contact( operand:=sig, bit:=#mem )` |
+| 14 | **MUX 没写 else 输出** | `Pin 'else' missing` | 加 `else := default_value` |
+| 15 | **NEG 用了 in1 引脚** | 编译报错 | 引脚名是 `in` 不是 `in1` |
+| 16 | **VAR_TEMP 用了 AT 覆盖** | 语法错误 | LAD 不支持 `AT` 语法，用独立变量 |
+| 17 | **JMP/LABEL/RET 导入** | `mismatched input 'LABEL'` | S7DCL 导入不支持跳转/返回指令 |
 
 ---
 
