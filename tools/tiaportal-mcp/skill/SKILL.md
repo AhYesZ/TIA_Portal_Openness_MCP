@@ -231,6 +231,8 @@ Paths below are relative to the **delivery bundle root** (the folder that contai
 | Optional `reference/` sample projects (outside bundle) | `docs/optional-reference-materials.md` |
 | PLC network & instruction expansion patterns | `docs/plc-network-patterns-expanded.md` |
 | Importable LAD XML samples | `tools/tiaportal-mcp/skill/lad-cookbook/*.xml` |
+| **LAD via S7DCL — 完整指令语法参考** | `tools/tiaportal-mcp/skill/s7dcl-lad-reference.md` |
+| DS 格式官方 PDF + SimaticSDEnabler 工具 | `docs/DS文件收集/` |
 | External SCL sources (UTF-8 BOM on disk) | `tools/tiaportal-mcp/skill/scl-cookbook/*.scl` |
 
 The static files are for planning and parser grounding; run `tools/list` on the
@@ -473,74 +475,31 @@ There is **no MCP tool that builds contact/coil/compare FlgNet XML** (`LadNetwor
 
 ### 9a. LAD via S7DCL (PREFERRED, verified V21 round-trip)
 
-Author two paired files, **both UTF-8 *with* BOM**:
-- `Name.s7dcl` — block declaration + LAD networks
-- `Name.s7res` — `MLC_*` text IDs → localized strings (**this is where Chinese comments/titles live**)
+**完整语法参考: `skill/s7dcl-lad-reference.md`** — 覆盖全部触点/线圈/ENO-Box/Q-Box/跳转/定时器/计数器/并联分支语法，基于 Siemens spec Entry ID 109994073。
 
-Verified references — copy these, change names + logic:
+快速入门——三步法：
+
+**1) 参照样本复制起手模板。** 两个已验证样本位于：
 ```
 skill/lad-cookbook/MCPVerify_FC_LAD.s7dcl  + .s7res   (FC: 串联/并联/SR/比较/Move/Add)
 skill/lad-cookbook/MCPVerify_FB_LAD_v3.s7dcl + .s7res  (FB: 定时器放 Static)
 ```
 
-Grammar (distilled from the verified sample):
-```
-{ S7_BlockComment := "MLC_548"; S7_BlockNumber := "901";
-  S7_BlockTitle := "MLC_4Vm"; S7_Optimized := "TRUE";
-  S7_PreferredLanguage := "LAD"; S7_Version := "0.1" }
-FUNCTION "MCPVerify_FC_LAD" : Void
-    VAR_INPUT  "A" : Bool; SET : Bool; VAL : Int; END_VAR
-    VAR_OUTPUT OUT_AND : Bool; OUT_SR : Bool; DST : Int; END_VAR
+**2) 文件必须满足的基本结构：**
+- 两个文件（`Name.s7dcl` + `Name.s7res`），均 UTF-8 **with BOM**
+- 块声明头 → `{ S7_Language := "LAD" }` pragma → `NETWORK … END_NETWORK`
+- 变量引用: `#VarName`（块接口）、`"DB_Name".Member`（全局 DB）
+- `.s7res` 中每个 `MLC_*` 必须有 `zh-CN` **和** `en-US` 条目
 
-    { S7_Language := "LAD"; S7_NetworkComment := "MLC_4X9"; S7_NetworkTitle := "MLC_3fA" }
-    NETWORK
-        RUNG wire#powerrail                       -- series AND
-            Contact( #"A" ) Contact( #"B" ) Coil( #OUT_AND )
-        END_RUNG
-    END_NETWORK
-
-    NETWORK                                        -- parallel OR via wire#w1
-        RUNG wire#powerrail Contact( #"A" ) wire#w1 Coil( #OUT_OR ) END_RUNG
-        RUNG wire#powerrail Contact( #"B" )        END_RUNG wire#w1
-    END_NETWORK
-
-    NETWORK RUNG wire#powerrail Contact( #SET )   S_Coil( #OUT_SR ) END_RUNG END_NETWORK
-    NETWORK RUNG wire#powerrail Contact( #RESET ) R_Coil( #OUT_SR ) END_RUNG END_NETWORK
-
-    NETWORK                                        -- compare: VAL > 100
-        RUNG wire#powerrail
-            { S7_Templates := "SrcType := Int" }
-            GT_Contact( in1 := #VAL, in2 := 100 ) Coil( #OUT_GT )
-        END_RUNG
-    END_NETWORK
-
-    NETWORK RUNG wire#powerrail Move( in := 42, out1 => #DST ) END_RUNG END_NETWORK
-    NETWORK
-        RUNG wire#powerrail
-            { S7_Templates := "SrcType := Int" }
-            Add( in1 := #V1, in2 := #V2, out => #SUM )
-        END_RUNG
-    END_NETWORK
-END_FUNCTION
-```
-Element vocabulary: `Contact`/`Coil`/`S_Coil`/`R_Coil`, parallel branches joined by a
-`wire#wN` label, `GT_Contact`/`LT_Contact`/… + `{ S7_Templates := "SrcType := Int" }`,
-`Move( in:=, out1=> )`, `Add`/`Sub`/`Mul`/`Div( in1:=, in2:=, out=> )`. `.s7res` `id:`
-values must match every `MLC_*` referenced in `.s7dcl`. For instructions not shown here
-(常闭/negated contact, edges, timers, `Calc`…), **export a real block that uses them with
-`ExportBlocksAsDocuments` and copy the exact `.s7dcl` syntax** — do not guess.
-
-Import:
+**3) 导入：**
 ```
 ImportBlocksFromDocuments(softwarePath="<plc>", groupPath="", importPath="<dir-with-both-files>")
 CompileSoftware(softwarePath="<plc>")            ← errorCount must be 0
 ```
 
-> **Boundary (known TIA limitation):** importing **LAD** from SD documents can fail
-> unless every `.s7res` item also has an **`en-US`** tag, not only `zh-CN`. The
-> bundled samples round-tripped on a V21 zh-CN machine with `zh-CN` only, but if
-> `ImportBlocksFromDocuments` fails on a LAD block, **add an `en-US:` line beside each
-> `zh-CN:` in the `.s7res`** and retry. (See README "Known Limitations".)
+**4) 遇到未知指令语法时：** 不要猜——从 TIA 导出一个包含该指令的块（`ExportBlocksAsDocuments`），复制真实 `.s7dcl` 语法。
+
+> **已知 TIA 限制：** 导入 LAD 时如果仅有 `zh-CN` 可能失败——为每条 `.s7res` 条目同时添加 `en-US:` 行。
 
 ### 9b. LAD via FlgNet XML (fallback — FC-call tool, or last-resort hand edit)
 
