@@ -3215,6 +3215,39 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "ValidateS7dclDocuments"), Description("[L2][PLC-Builders][Offline] Offline-only validator for SIMATIC SD LAD document pairs (.s7dcl + .s7res). Checks UTF-8 BOM, block declarations, network S7_Language pragmas, MLC cross-references (zh-CN + en-US), wire consistency, known instruction names, and 10 common trap patterns — all without connecting to TIA Portal. Pass a directory containing .s7dcl/.s7res files or a single file path. Use before ImportBlocksFromDocuments to catch errors early.")]
+        public static ResponseJsonReport ValidateS7dclDocuments(
+            [Description("directoryOrFilePath: directory containing .s7dcl/.s7res files, or path to a single .s7dcl or .s7res file.")] string directoryOrFilePath)
+        {
+            try
+            {
+                var data = S7dclDocumentValidator.Validate(directoryOrFilePath);
+                var ok = data["ok"]?.GetValue<bool>() == true;
+                return new ResponseJsonReport
+                {
+                    Ok = ok,
+                    Message = ok ? "S7DCL document validation passed" : "S7DCL document validation found issues — see errors[]",
+                    Data = data,
+                    Errors = data["errors"]?.AsArray()?.Select(e => e!.ToString()).ToArray(),
+                    Warnings = data["warnings"]?.AsArray()?.Select(w => w!.ToString()).ToArray(),
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = ok,
+                        ["offlineOnly"] = true,
+                        ["errorCount"] = data["errorCount"]?.GetValue<int>() ?? 0,
+                        ["warnCount"] = data["warnCount"]?.GetValue<int>() ?? 0,
+                        ["passCount"] = data["passCount"]?.GetValue<int>() ?? 0,
+                        ["fileCount"] = data["fileCount"]?.GetValue<int>() ?? 0
+                    }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error validating S7DCL documents offline: {ex.Message}", ex, McpErrorCode.InternalError);
+            }
+        }
+
         [McpServerTool(Name = "BuildReleaseDiagnosticReport"), Description("[L2][Reports]Build an offline diagnostic report from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects.")]
         public static ResponseJsonReport BuildReleaseDiagnosticReport(
             [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath)
