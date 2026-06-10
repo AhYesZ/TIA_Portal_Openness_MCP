@@ -475,29 +475,35 @@ There is **no MCP tool that builds contact/coil/compare FlgNet XML** (`LadNetwor
 
 ### 9a. LAD via S7DCL (PREFERRED, verified V21 round-trip)
 
-**完整语法参考: `skill/s7dcl-lad-reference.md`** — 覆盖全部触点/线圈/ENO-Box/Q-Box/跳转/定时器/计数器/并联分支语法，基于 Siemens spec Entry ID 109994073。
+**MANDATORY — follow these steps in order. Do NOT skip any step. Do NOT hand-write .s7dcl text from memory — always load the reference first.**
 
-快速入门——三步法：
+**0) 必须先加载的知识源（每次 LAD 工作时都要做）：**
+- 读文件 `tools/tiaportal-mcp/skill/s7dcl-lad-reference.md` — 495 行完整语法，覆盖 99 条指令
+- 读文件 `tools/tiaportal-mcp/skill/lad-cookbook/MCPVerify_FC_LAD.s7dcl` 和对应的 `.s7res` — 已验证样本
 
-**1) 参照样本复制起手模板。** 两个已验证样本位于：
+**1) 用 BuildS7dclLadBlock 工具从 JSON 生成（不要手写）：**
 ```
-skill/lad-cookbook/MCPVerify_FC_LAD.s7dcl  + .s7res   (FC: 串联/并联/SR/比较/Move/Add)
-skill/lad-cookbook/MCPVerify_FB_LAD_v3.s7dcl + .s7res  (FB: 定时器放 Static)
+BuildS7dclLadBlock(json=<structured JSON>, outputDirectory=<dir>, dryRun=true)
+→ 验证 JSON 正确性
+BuildS7dclLadBlock(json=<same JSON>, outputDirectory=<dir>, dryRun=false)
+→ 写入 .s7dcl + .s7res (UTF-8 BOM)
+```
+JSON schema: `{blockKind, blockName, blockNumber, inputs:[{n,t}], outputs:[{n,t}], networks:[{t, e:[{i,o|p|tp}], b?:[[...]]}]}`
+
+**2) 用 ValidateS7dclDocuments 做离线校验（导入前必做）：**
+```
+ValidateS7dclDocuments(directoryOrFilePath=<outputDirectory>)
+→ 14 项检查：BOM, 配对, 块声明, pragma, MLC交叉引用, wire一致性, 指令验证, 陷阱检测
+→ 必须 errorCount=0 才能继续
 ```
 
-**2) 文件必须满足的基本结构：**
-- 两个文件（`Name.s7dcl` + `Name.s7res`），均 UTF-8 **with BOM**
-- 块声明头 → `{ S7_Language := "LAD" }` pragma → `NETWORK … END_NETWORK`
-- 变量引用: `#VarName`（块接口）、`"DB_Name".Member`（全局 DB）
-- `.s7res` 中每个 `MLC_*` 必须有 `zh-CN` **和** `en-US` 条目
-
-**3) 导入：**
+**3) 导入并编译：**
 ```
-ImportBlocksFromDocuments(softwarePath="<plc>", groupPath="", importPath="<dir-with-both-files>")
+ImportBlocksFromDocuments(softwarePath="<plc>", groupPath="", importPath=<outputDirectory>)
 CompileSoftware(softwarePath="<plc>")            ← errorCount must be 0
 ```
 
-**4) 遇到未知指令语法时：** 不要猜——从 TIA 导出一个包含该指令的块（`ExportBlocksAsDocuments`），复制真实 `.s7dcl` 语法。
+**4) 遇到新指令时：** 从 TIA 导出（ExportBlocksAsDocuments）真实语法，更新 `s7dcl-lad-reference.md`。
 
 > **已知 TIA 限制：** 导入 LAD 时如果仅有 `zh-CN` 可能失败——为每条 `.s7res` 条目同时添加 `en-US:` 行。
 
