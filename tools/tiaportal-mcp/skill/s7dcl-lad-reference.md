@@ -123,11 +123,17 @@ END_ORGANIZATION_BLOCK
 | `LE_Contact` | 2 | `in1 <= in2` | `{SrcType:=Int} LE_Contact(in1:=#V, in2:=#Max)` |
 | `IsValidContact` | 1 | 检查浮点有效性 | `IsValidContact( x )` |
 | `IsNotValidContact` | 1 | 检查浮点无效 | `IsNotValidContact( x )` |
+| `IsArrayContact` | 1 | 检查 Variant 是否含数组 | `IsArrayContact( x )` |
+| `IsNotArrayContact` | 1 | 检查 Variant 是否无数组 | `IsNotArrayContact( x )` |
+| `IsNullContact` | 1 | 检查引用类型是否为 Null | `IsNullContact( x )` |
+| `IsNotNullContact` | 1 | 检查引用类型是否非 Null | `IsNotNullContact( x )` |
 | `EQ_TypeContact` | 2 | 比较数据类型 | `EQ_TypeContact(in1:=, in2:=)` |
 | `NE_TypeContact` | 2 | 比较数据类型 | `NE_TypeContact(in1:=, in2:=)` |
-| `EQ_ElemTypeContact` | 2 | 比较元素类型 | `EQ_ElemTypeContact(in1:=, in2:=)` |
+| `EQ_ElemTypeContact` | 2 | 比较数组元素类型 | `EQ_ElemTypeContact(in1:=, in2:=)` |
+| `NE_ElemTypeContact` | 2 | 比较数组元素类型 | `NE_ElemTypeContact(in1:=, in2:=)` |
 | `EQ_TypeOfDBContact` | 2 | 比较 DB 类型 | `EQ_TypeOfDBContact(in1:=, in2:=)` |
-| 标志触点 | 0 | AS300/400 | `BR_FlagContact()`, `OS_FlagContact()`, `OV_FlagContact()`, `UO_FlagContact()` |
+| `NE_TypeOfDBContact` | 2 | 比较 DB 类型 | `NE_TypeOfDBContact(in1:=, in2:=)` |
+| 标志触点 | 0 | AS300/400 状态字 | 见 §A.1 附录——共 19 个遗留标志触点 |
 
 ### 3.2 线圈 Coils
 
@@ -153,12 +159,16 @@ END_ORGANIZATION_BLOCK
 | `CU_Coil` | 1 | 加计数 | `CU_Coil( counter )` |
 | `CD_Coil` | 1 | 减计数 | `CD_Coil( counter )` |
 | `SC_Coil` | 2 | 预置计数值 | `SC_Coil( counter:=#ctr, pv:=C#100 )` |
+| `R_BitfieldCoil` | 2 | 复位 n 个连续 Bool 位 | `R_BitfieldCoil( operand:=addr, n:=count )` |
+| `S_BitfieldCoil` | 2 | 置位 n 个连续 Bool 位 | `S_BitfieldCoil( operand:=addr, n:=count )` |
 | `JumpCoil` | 1 | 条件跳转(真) | `JumpCoil( label )` |
 | `I_JumpCoil` | 1 | 条件跳转(假) | `I_JumpCoil( label )` |
 | `ReturnCoil` | 1 | 返回+ENO | `ReturnCoil( x )` |
 | `ReturnFalse` | 0 | 返回 ENO=false | `ReturnFalse()` |
 | `ReturnTrue` | 0 | 返回 ENO=true | `ReturnTrue()` |
 | `Return` | 0 | 返回 ENO=rung-in | `Return()` |
+| `CallCoil` | 1 | 以线圈形式调用块 | `CallCoil( blockName )` |
+| 零操作数线圈 | 0 | AS300/400 MCR/SAVE | 见 §A.2 附录——共 5 个遗留线圈 |
 
 ### 3.3 否定
 ```
@@ -267,6 +277,28 @@ END_RUNG wire#w1
 #inst.Ctud( cu := , cd := , r := #Reset, ld := #Load,
             pv := #Preset, qd => , qu => , cv => #Value )
 ```
+注意: IEC 计数器没有对应的线圈形式。
+
+#### Simatic 计数器 Box（兼容 AS300/400）
+```
+S_Cu(
+    cu := #CountUp,
+    pv := C#100,
+    cv => #Value
+)
+S_Cd(
+    cd := #CountDown,
+    pv := C#100,
+    cv => #Value
+)
+S_Cud(
+    cu := #CountUp,
+    cd := #CountDown,
+    pv := C#100,
+    cv => #Value
+)
+```
+Simatic 计数器用 BCD 编码预设值（`C#100`），输出 `cv` 为整数，`cv_bcd` 为 BCD 格式。`q` 输出 = `cv > 0`。
 
 ### 3.6 跳转 & 标签
 
@@ -381,6 +413,56 @@ MultiLingualTexts:
 | 8 | **忘写 `S7_Language`** | 网络无效 | 每个 NETWORK 前加 pragma |
 | 9 | **猜测未知指令语法** | 导入报错 | `ExportBlocksAsDocuments` 导出真实语法 |
 | 10 | **wire# 放错位置** | EN 断连 | wire# 只用于并联分支 |
+
+---
+
+## 附录 A：AS300/400 专用遗留指令（完整清单）
+
+以下指令仅在目标平台为 AS300/AS400 时可用。S7-1200/1500 优化块访问模式下通常不需要。
+
+### A.1 标志触点（共 19 个，对应 PDF Table 3）
+
+| 指令 | 标志 | 说明 |
+|------|------|------|
+| `BR_FlagContact()` | BR | 二进制结果位 |
+| `BR_I_Flag_Contract()` | not BR | 取反 BR |
+| `OS_FlagContact()` | OS | 溢出存储位 |
+| `OS_I_Flag_Contract()` | not OS | 取反 OS |
+| `OV_FlagContact()` | OV | 溢出位 |
+| `OV_I_Flag_Contract()` | not OV | 取反 OV |
+| `UO_FlagContact()` | UO | 无序位（浮点无效） |
+| `UO_I_Flag_Contract()` | not UO | 取反 UO |
+| `EQ_FlagsContact()` | not A0 and not A1 | A0=A1 |
+| `EQ_I_Flags_Contract()` | A0 or A1 | A0<>A1 |
+| `NE_FlagsContact()` | A0 <> A1 | A0<>A1 |
+| `NE_I_Flags_Contract()` | A0 = A1 | A0=A1 |
+| `GE_FlagsContact()` | not A0 | >=0 |
+| `GE_I_Flags_Contract()` | A0 | <0 |
+| `LE_FlagsContact()` | not A1 | <=0 |
+| `LE_I_Flags_Contract()` | A1 | >0 |
+| `GT_FlagsContact()` | not A0 and A1 | >0 |
+| `GT_I_Flags_Contract()` | A0 or not A1 | <=0 |
+| `LT_FlagsContact()` | A0 and not A1 | <0 |
+| `LT_I_Flags_Contract()` | not A0 or A1 | >=0 |
+
+### A.2 零操作数线圈（共 5 个，对应 PDF §4.2.3）
+
+| 指令 | 说明 |
+|------|------|
+| `McrOpenCoil()` | 打开 MCR 区 |
+| `McrCloseCoil()` | 关闭 MCR 区 |
+| `McrActivateCoil()` | 激活 MCR |
+| `McrDeactivateCoil()` | 停用 MCR |
+| `SaveCoil()` | 保存 RLO 到 BR 位 |
+
+### A.3 其他遗留指令
+
+| 指令 | 说明 |
+|------|------|
+| `OpenDBCoil( operand )` | 打开全局数据块 |
+| `OpenDICoil( operand )` | 打开实例数据块 |
+
+> 以上条目基于 Siemens spec Entry ID 109994073 §4.1.3、§4.2.3、§4.6.1 逐条提取。
 
 ---
 
