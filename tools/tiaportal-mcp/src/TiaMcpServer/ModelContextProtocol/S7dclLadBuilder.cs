@@ -351,7 +351,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
             // Main rung
             sb.Append("        RUNG wire#powerrail");
-            bool hasWire = wireLabel != null;
 
             if (elements != null)
             {
@@ -370,17 +369,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
             }
+            // Main rung always ends with END_RUNG (no wire reference)
+            // wire# is only used on branch rung END_RUNG to connect TO the wire
             sb.AppendLine();
-            if (hasWire)
-            {
-                // Ensure wire label is just the name (strip any wire# prefix from input)
-                var wl = wireLabel!.StartsWith("wire#") ? wireLabel.Substring(5) : wireLabel;
-                sb.AppendLine($"        END_RUNG wire#{wl}");
-            }
-            else
-            {
-                sb.AppendLine("        END_RUNG");
-            }
+            sb.AppendLine("        END_RUNG");
         }
 
         // ── Element writer ──
@@ -403,12 +395,19 @@ namespace TiaMcpServer.ModelContextProtocol
             var callName = elem["call"]?.ToString();
             if (!string.IsNullOrWhiteSpace(callName))
             {
-                // Block call: FC name or FB instance name (no quotes in S7DCL)
+                // Block call: FC name or FB instance name — reference format with params indented
                 var callParams = elem["p"]?.AsObject() ?? elem["params"]?.AsObject();
-                sb.Append($"\r\n            {callName}(");
-                if (callParams != null && callParams.Count > 0)
+                var hasCallParams = callParams != null && callParams.Count > 0;
+                if (hasCallParams)
+                {
+                    sb.Append($"\r\n            {callName}(\r\n");
                     WriteParams(sb, callParams, instr);
-                sb.Append(" )");
+                    sb.Append("\r\n            )");
+                }
+                else
+                {
+                    sb.Append($"\r\n            {callName}( )");
+                }
                 return;
             }
 
@@ -450,24 +449,28 @@ namespace TiaMcpServer.ModelContextProtocol
             var paramObj = elem["p"]?.AsObject() ?? elem["params"]?.AsObject();
             bool hasParams = paramObj != null && paramObj.Count > 0;
 
-            // Instance-prefixed instructions (Q-boxes: #inst.TON, c.S_RS)
+            // Instance-prefixed instructions (Q-boxes: #"inst".TON, etc.)
             if (!string.IsNullOrWhiteSpace(inst))
             {
                 var effectiveInstr = elem["method"]?.ToString();  // optional: explicit method name
                 var callInstr = effectiveInstr ?? instr;
-                sb.Append($"{FormatVarRef(inst)}.{callInstr}(");
+                // Instance names are block-local → must use #"Name" format
+                var instRef = inst.StartsWith("#") ? FormatVarRef(inst) : FormatVarRef("#" + inst);
+                sb.Append($"\r\n            {instRef}.{callInstr}(\r\n");
                 if (hasParams)
                     WriteParams(sb, paramObj, instr);
-                sb.Append(" )");
+                sb.Append("\r\n            )");
                 return;
             }
 
             // ── Multi-parameter instructions (boxes: Add, Move, GT, MIN, etc.) ──
             if (hasParams)
             {
-                sb.Append($"{instr}(");
+                // Reference format: instruction name + opening paren on same line,
+                // then indented params on separate lines, closing paren on own line
+                sb.Append($"{instr}(\r\n");
                 WriteParams(sb, paramObj, instr);
-                sb.Append(" )");
+                sb.Append("\r\n            )");
             }
             else
             {
