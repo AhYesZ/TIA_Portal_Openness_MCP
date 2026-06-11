@@ -192,7 +192,7 @@ Use the ExportTypes tool with:
         {
             return $@"Export blocks as SIMATIC SD documents (.s7dcl/.s7res). Requires TIA Portal V20+.
 
-Note: importing LAD blocks requires the .s7res to contain en-US tags for all items.
+Note: importing LAD blocks requires the .s7res to contain zh-CN tags for all items.
 
 Use the ExportBlocksAsDocuments tool with:
 - softwarePath: {softwarePath}
@@ -238,7 +238,7 @@ Use the ExportBlocksAsDocuments tool with:
         {
             return $@"Import one program block from SIMATIC SD documents (requires TIA Portal V20+).
 
-Note: importing LAD blocks requires the .s7res to contain en-US tags.
+Note: importing LAD blocks requires the .s7res to contain zh-CN tags.
 
 Use the ImportFromDocuments tool with:
 - softwarePath: {softwarePath}
@@ -253,7 +253,7 @@ Use the ImportFromDocuments tool with:
         {
             return $@"Import multiple program blocks from SIMATIC SD documents (requires TIA Portal V20+).
 
-Note: importing LAD blocks requires the .s7res to contain en-US tags.
+Note: importing LAD blocks requires the .s7res to contain zh-CN tags.
 
 Use the ImportBlocksFromDocuments tool with:
 - softwarePath: {softwarePath}

@@ -3256,7 +3256,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ValidateS7dclDocuments"), Description("[L2][PLC-Builders][Offline] Offline-only validator for SIMATIC SD LAD document pairs (.s7dcl + .s7res). Checks UTF-8 BOM, block declarations, network S7_Language pragmas, MLC cross-references (zh-CN + en-US), wire consistency, known instruction names, and 10 common trap patterns — all without connecting to TIA Portal. Pass a directory containing .s7dcl/.s7res files or a single file path. Use before ImportBlocksFromDocuments to catch errors early.")]
+        [McpServerTool(Name = "ValidateS7dclDocuments"), Description("[L2][PLC-Builders][Offline] Offline-only validator for SIMATIC SD LAD document pairs (.s7dcl + .s7res). Checks UTF-8 BOM, block declarations, network S7_Language pragmas, MLC cross-references (zh-CN only), wire consistency, known instruction names, and 10 common trap patterns — all without connecting to TIA Portal. Pass a directory containing .s7dcl/.s7res files or a single file path. Use before ImportBlocksFromDocuments to catch errors early.")]
         public static ResponseJsonReport ValidateS7dclDocuments(
             [Description("directoryOrFilePath: directory containing .s7dcl/.s7res files, or path to a single .s7dcl or .s7res file.")] string directoryOrFilePath)
         {
@@ -7606,18 +7606,18 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var option = ParseImportDocumentOption(importOption);
 
-                // Pre-check .s7res for missing en-US tags
+                // Pre-check .s7res for missing zh-CN tags
                 var warnings = new JsonArray();
                 try
                 {
-                    var missingIds = GetResMissingEnUsIds(importPath, fileNameWithoutExtension);
+                    var missingIds = GetResMissingZhCnIds(importPath, fileNameWithoutExtension);
                     if (missingIds != null && missingIds.Count > 0)
                     {
-                        Logger?.LogWarning($".s7res for '{fileNameWithoutExtension}' missing en-US tags for {missingIds.Count} items: {string.Join(", ", missingIds)}");
+                        Logger?.LogWarning($".s7res for '{fileNameWithoutExtension}' missing zh-CN tags for {missingIds.Count} items: {string.Join(", ", missingIds)}");
                         warnings.Add(new JsonObject
                         {
                             ["name"] = fileNameWithoutExtension,
-                            ["missingEnUsIds"] = new JsonArray(missingIds.Select(id => (JsonNode)id).ToArray())
+                            ["missingZhCnIds"] = new JsonArray(missingIds.Select(id => (JsonNode)id).ToArray())
                         });
                     }
                 }
@@ -7958,7 +7958,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static List<string> GetResMissingEnUsIds(string directory, string baseName)
+        private static List<string> GetResMissingZhCnIds(string directory, string baseName)
         {
             var resPath = Path.Combine(directory, baseName + ".s7res");
             var missing = new List<string>();
@@ -7970,9 +7970,9 @@ namespace TiaMcpServer.ModelContextProtocol
             XNamespace ns = xdoc.Root?.Name.Namespace ?? XNamespace.None;
             foreach (var comment in xdoc.Descendants(ns + "Comment"))
             {
-                var hasEnUs = comment.Elements(ns + "MultiLanguageText")
-                                     .Any(e => string.Equals((string?)e.Attribute("Lang"), "en-US", StringComparison.OrdinalIgnoreCase));
-                if (!hasEnUs)
+                var hasZhCn = comment.Elements(ns + "MultiLanguageText")
+                                     .Any(e => string.Equals((string?)e.Attribute("Lang"), "zh-CN", StringComparison.OrdinalIgnoreCase));
+                if (!hasZhCn)
                 {
                     var id = (string?)comment.Attribute("Id") ?? "";
                     missing.Add(id);

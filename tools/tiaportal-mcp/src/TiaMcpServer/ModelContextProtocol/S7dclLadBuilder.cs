@@ -9,7 +9,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
     /// Offline builder: JSON → .s7dcl + .s7res LAD document pair.
-    /// Generates UTF-8 with BOM files suitable for ImportBlocksFromDocuments / ImportFromDocuments.
+    /// Generates UTF-8 (no BOM) files suitable for ImportBlocksFromDocuments / ImportFromDocuments.
     ///
     /// Based on Siemens spec Entry ID 109994073 and verified round-trip on TIA V21
     /// against FB_CompleteInstructionGallery (67 networks, 0 errors).
@@ -67,7 +67,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // ── Build .s7dcl ──
             var sb = new StringBuilder();
 
-            // UTF-8 BOM will be written by File.WriteAllText with UTF8Encoding(true)
+            // UTF-8 without BOM — matches reference files exported from TIA
             // Block pragma header
             sb.AppendLine("{");
             sb.AppendLine($"    S7_BlockComment := \"{blockCommentMlc}\";");
@@ -167,7 +167,6 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 s7resSb.AppendLine($"  - id: {kvp.Key}");
                 s7resSb.AppendLine($"    zh-CN: {kvp.Value}");
-                s7resSb.AppendLine($"    en-US: {kvp.Value}");
             }
 
             // ── Write files ──
@@ -175,9 +174,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var s7dclPath = Path.Combine(outputDirectory, $"{blockName}.s7dcl");
             var s7resPath = Path.Combine(outputDirectory, $"{blockName}.s7res");
 
-            // Write with UTF-8 BOM
-            File.WriteAllText(s7dclPath, sb.ToString(), new UTF8Encoding(true));
-            File.WriteAllText(s7resPath, s7resSb.ToString(), new UTF8Encoding(true));
+            // Write WITHOUT BOM — reference files from TIA have no BOM
+            File.WriteAllText(s7dclPath, sb.ToString(), new UTF8Encoding(false));
+            File.WriteAllText(s7resPath, s7resSb.ToString(), new UTF8Encoding(false));
 
             var result = new JsonObject
             {
@@ -192,7 +191,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["outputFiles"] = new JsonArray(s7dclPath, s7resPath),
                 ["mlcCount"] = mlcMap.Count,
                 ["networkCount"] = netIdx,
-                ["message"] = $"Generated {blockName}.s7dcl + .s7res (UTF-8 BOM) in {outputDirectory}. Import with ImportBlocksFromDocuments or ImportFromDocuments."
+                ["message"] = $"Generated {blockName}.s7dcl + .s7res (UTF-8, no BOM) in {outputDirectory}. Import with ImportBlocksFromDocuments or ImportFromDocuments."
             };
 
             return result;
@@ -308,7 +307,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         var wireDef = eObj["wire"]?.ToString();
                         if (wireDef != null)
                         {
-                            sb.Append($"\n            wire#{wireDef}");
+                            sb.Append($"\r\n            wire#{wireDef}");
                             continue;
                         }
                         WriteElement(sb, eObj);
@@ -350,7 +349,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 // Block call: FC name or FB instance name (no quotes in S7DCL)
                 var callParams = elem["p"]?.AsObject() ?? elem["params"]?.AsObject();
-                sb.Append($"\n            {callName}(");
+                sb.Append($"\r\n            {callName}(");
                 if (callParams != null && callParams.Count > 0)
                     WriteParams(sb, callParams, instr);
                 sb.Append(" )");
@@ -364,7 +363,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (hasTemplate || hasGenEno || hasExpr)
             {
-                sb.Append("\n            {");
+                sb.Append("\r\n            {");
                 var pragmas = new List<string>();
                 if (hasTemplate) pragmas.Add($" S7_Templates := \"{template}\"");
                 if (hasGenEno) pragmas.Add($" S7_GenerateENO := \"{genEno}\"");
@@ -374,7 +373,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             // Build instruction call
-            sb.Append("\n            ");
+            sb.Append("\r\n            ");
 
             // ── Single operand (contacts, coils, edge-detect boxes) ──
             if (!string.IsNullOrWhiteSpace(operand))
@@ -435,7 +434,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string connector = isOutput ? "=>" : ":=";
                 items.Add($"{key} {connector} {val}");
             }
-            sb.Append(string.Join(",\n                ", items));
+            sb.Append(string.Join(",\r\n                ", items));
         }
 
         /// <summary>

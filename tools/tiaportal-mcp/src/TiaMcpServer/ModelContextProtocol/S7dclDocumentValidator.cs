@@ -92,7 +92,6 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly Regex NetworkKeywordRegex = new(@"^\s*NETWORK\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex S7resEntryRegex = new(@"^\s*-\s+id:\s*(\S+)", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex ZhCnRegex = new(@"zh-CN:", RegexOptions.Compiled);
-        private static readonly Regex EnUsRegex = new(@"en-US:", RegexOptions.Compiled);
         private static readonly Regex JumpReturnRegex = new(@"\b(JumpCoil|I_JumpCoil|ReturnCoil|ReturnFalse|ReturnTrue|Return|JumpList|Switch)\s*\(", RegexOptions.Compiled);
 
         // Trap detection: wire# directly between a Contact (or other rung-in) and an ENO-Box
@@ -279,26 +278,23 @@ namespace TiaMcpServer.ModelContextProtocol
                     mlcIdsInDcl.Add(m.Value);
 
                 // ── Parse .s7res for MLC entries ──
-                var mlcIdsInRes = new Dictionary<string, bool>(); // id → hasBothLanguages
+                var mlcIdsInRes = new Dictionary<string, bool>(); // id → hasZhCn
                 var currentId = "";
                 var hasZhCn = false;
-                var hasEnUs = false;
                 foreach (var line in s7resContent.Split('\n'))
                 {
                     var idMatch = S7resEntryRegex.Match(line);
                     if (idMatch.Success)
                     {
                         if (!string.IsNullOrEmpty(currentId))
-                            mlcIdsInRes[currentId] = hasZhCn && hasEnUs;
+                            mlcIdsInRes[currentId] = hasZhCn;
                         currentId = idMatch.Groups[1].Value;
                         hasZhCn = false;
-                        hasEnUs = false;
                     }
                     if (ZhCnRegex.IsMatch(line)) hasZhCn = true;
-                    if (EnUsRegex.IsMatch(line)) hasEnUs = true;
                 }
                 if (!string.IsNullOrEmpty(currentId))
-                    mlcIdsInRes[currentId] = hasZhCn && hasEnUs;
+                    mlcIdsInRes[currentId] = hasZhCn;
 
                 // ── MLC cross-reference ──
                 if (mlcIdsInDcl.Count == 0)
@@ -306,20 +302,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 else
                 {
                     var missingInRes = new List<string>();
-                    var missingLang = new List<string>();
+                    var missingZhCn = new List<string>();
                     foreach (var mlc in mlcIdsInDcl)
                     {
                         if (!mlcIdsInRes.ContainsKey(mlc))
                             missingInRes.Add(mlc);
                         else if (!mlcIdsInRes[mlc])
-                            missingLang.Add(mlc);
+                            missingZhCn.Add(mlc);
                     }
                     if (missingInRes.Count > 0)
                         AddCheck("mlc", "fail", $"{baseName}: {missingInRes.Count} MLC IDs referenced in .s7dcl but missing from .s7res: {string.Join(", ", missingInRes.Take(10))}{(missingInRes.Count > 10 ? "..." : "")}");
-                    if (missingLang.Count > 0)
-                        AddCheck("mlc", "fail", $"{baseName}: {missingLang.Count} MLC entries missing zh-CN or en-US in .s7res: {string.Join(", ", missingLang.Take(10))}{(missingLang.Count > 10 ? "..." : "")}");
-                    if (missingInRes.Count == 0 && missingLang.Count == 0)
-                        AddCheck("mlc", "pass", $"{baseName}: All {mlcIdsInDcl.Count} MLC references resolved in .s7res with zh-CN + en-US.");
+                    if (missingZhCn.Count > 0)
+                        AddCheck("mlc", "fail", $"{baseName}: {missingZhCn.Count} MLC entries missing zh-CN in .s7res: {string.Join(", ", missingZhCn.Take(10))}{(missingZhCn.Count > 10 ? "..." : "")}");
+                    if (missingInRes.Count == 0 && missingZhCn.Count == 0)
+                        AddCheck("mlc", "pass", $"{baseName}: All {mlcIdsInDcl.Count} MLC references resolved in .s7res with zh-CN.");
                 }
 
                 // ── Detect orphan MLC IDs in .s7res (not referenced in .s7dcl) ──
@@ -443,9 +439,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var bytes = File.ReadAllBytes(path);
-                if (bytes.Length < 3 || bytes[0] != 0xEF || bytes[1] != 0xBB || bytes[2] != 0xBF)
+                bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+                if (!hasBom)
                 {
-                    addCheck("file", "fail", $"{baseName}{ext}: Missing UTF-8 BOM. TIA requires BOM for non-ASCII text. (陷阱#3)");
+                    addCheck("file", "warn", $"{baseName}{ext}: No UTF-8 BOM — reference files from TIA export have no BOM. Verify TIA ImportBlocksFromDocuments accepts the file. (陷阱#3)");
                     return Encoding.UTF8.GetString(bytes);
                 }
                 addCheck("file", "pass", $"{baseName}{ext}: UTF-8 BOM present.");
