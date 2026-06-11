@@ -520,6 +520,8 @@ MultiLingualTexts:
 
 每个 `MLC_*` 必须在 .s7res 中有对应条目。**务必同时提供 `zh-CN` 和 `en-US`**，否则 LAD 导入可能失败。
 
+**⚠️ .s7res 必须精确定义**: .s7res 中不能有多余的 MLC 条目——只保留 .s7dcl 中实际引用的 MLC ID。多余的 MLC ID（例如从模板复制遗留的、旧网络删除后未清理的）会导致导入错误。修改 .s7dcl 时必须同步清理 .s7res。
+
 ---
 
 ## 七、陷阱速查
@@ -553,6 +555,7 @@ MultiLingualTexts:
 | 25 | **计数器 Static 类型用 IEC_COUNTER** | 类型错误 | 分别用 `CTU_INT`/`CTD_INT`/`CTUD_INT` |
 | 26 | **变量引用不用双引号** | 变量未定义 | `#"VarName"` 声明和引用都必须有双引号 |
 | 27 | **用了不存在的 CMP >= 盒语法** | 语法错误 | 比较盒用 `GT(in1:=, in2:=, out=>)` 非 `CMP >=` |
+| 28 | **.s7res 含多余 MLC 条目** | 导入失败 | .s7res 必须精确定义：只保留 .s7dcl 中实际引用的 MLC ID |
 
 ---
 
