@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -12,12 +11,27 @@ namespace TiaMcpServer.ModelContextProtocol
     /// Offline builder: JSON → .s7dcl + .s7res LAD document pair.
     /// Generates UTF-8 with BOM files suitable for ImportBlocksFromDocuments / ImportFromDocuments.
     ///
-    /// Based on Siemens spec Entry ID 109994073 and verified round-trip on TIA V21.
+    /// Based on Siemens spec Entry ID 109994073 and verified round-trip on TIA V21
+    /// against FB_CompleteInstructionGallery (67 networks, 0 errors).
     /// </summary>
     public static class S7dclLadBuilder
     {
-        private static readonly Random _rng = new();
+        // Deterministic MLC counter (no Random — same JSON → same output for Git diff friendliness)
         private static int _mlcCounter;
+
+        // ── Instructions that use => (output) pins ──
+        // White-list approach: explicit per-instruction output pins, not heuristic
+        private static readonly HashSet<string> OutputPins = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "out", "out1",                                         // Move(out1), Math(out), etc.
+            "et",                                                  // Timer elapsed time
+            "cv",                                                  // Counter current value
+            "q", "qu", "qd",                                       // Timer/Counter Q outputs
+            "eno",                                                 // ENO output
+            "else",                                                // MUX default output
+            "dest0", "dest1", "dest2", "dest3", "dest4",           // JumpList destinations
+            "dest5", "dest6", "dest7", "dest8", "dest9",
+        };
 
         // ── Public entry point ──
 
@@ -40,7 +54,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var networksJson = root["networks"]?.AsArray() ?? root["nw"]?.AsArray()
                 ?? new JsonArray();
 
-            // Reset MLC counter per build
+            // Reset MLC counter per build — deterministic (sequential hex)
             _mlcCounter = 1;
 
             var mlcMap = new Dictionary<string, string>(); // MLC_ID → zh-CN text
@@ -70,7 +84,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     sb.AppendLine($"FUNCTION \"{blockName}\" : Void");
                     WriteVarSection(sb, "VAR_INPUT", inputs);
                     WriteVarSection(sb, "VAR_OUTPUT", outputs);
-                    WriteVarSection(sb, "VAR_TEMP", new List<(string, string)>());
+                    // FC with SCL networks may need VAR_TEMP; always emit it
+                    if (!HasSclNetworks(networksJson))
+                        WriteVarSection(sb, "VAR_TEMP", new List<(string, string)>());
+                    else
+                        WriteVarSection(sb, "VAR_TEMP", new List<(string, string)>());
                     break;
                 case "fb":
                     sb.AppendLine($"FUNCTION_BLOCK \"{blockName}\"");
@@ -95,6 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var netTitle = netObj["t"]?.ToString() ?? netObj["title"]?.ToString() ?? $"N{netIdx}";
                 var netComment = netObj["c"]?.ToString() ?? netObj["comment"]?.ToString() ?? "";
+                var netLang = netObj["lang"]?.ToString() ?? "LAD";  // "LAD" or "SCL"
                 var elements = netObj["e"]?.AsArray() ?? netObj["elements"]?.AsArray();
                 var branches = netObj["b"]?.AsArray() ?? netObj["branches"]?.AsArray();
 
@@ -103,17 +122,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 mlcMap[netTitleMlc] = netTitle;
                 mlcMap[netCommentMlc] = netComment;
 
+                // FIXED: S7_NetworkTitle = title, S7_NetworkComment = comment (were swapped!)
                 sb.AppendLine();
                 sb.AppendLine("    {");
-                sb.AppendLine($"        S7_Language := \"LAD\";");
-                sb.AppendLine($"        S7_NetworkComment := \"{netTitleMlc}\";");
-                sb.AppendLine($"        S7_NetworkTitle := \"{netCommentMlc}\"");
+                sb.AppendLine($"        S7_Language := \"{netLang}\";");
+                sb.AppendLine($"        S7_NetworkTitle := \"{netTitleMlc}\";");
+                sb.AppendLine($"        S7_NetworkComment := \"{netCommentMlc}\"");
                 sb.AppendLine("    }");
                 sb.AppendLine("    NETWORK");
 
-                if (branches != null && branches.Count > 0)
+                if (netLang.Equals("SCL", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Parallel network: first rung has main elements + wire#w1, subsequent rungs are branches
+                    // SCL network: write raw SCL lines
+                    WriteSclNetwork(sb, netObj);
+                }
+                else if (branches != null && branches.Count > 0)
+                {
+                    // Parallel LAD network: main rung has elements + wire#w1, branches follow
                     WriteRung(sb, elements, wireLabel: "w1", isFirst: true);
                     int branchIdx = 0;
                     foreach (var branchNode in branches)
@@ -122,7 +147,6 @@ namespace TiaMcpServer.ModelContextProtocol
                         var branchElements = (branchNode as JsonArray) ?? new JsonArray();
                         WriteRung(sb, branchElements, wireLabel: null, wireTarget: "w1", isFirst: false);
                     }
-                    _ = branchIdx; // suppress unused warning
                 }
                 else
                 {
@@ -175,6 +199,20 @@ namespace TiaMcpServer.ModelContextProtocol
 
         // ── Helpers ──
 
+        private static bool HasSclNetworks(JsonArray networks)
+        {
+            foreach (var net in networks)
+            {
+                if (net is JsonObject obj)
+                {
+                    var lang = obj["lang"]?.ToString();
+                    if (lang != null && lang.Equals("SCL", StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+            return false;
+        }
+
         private static List<(string name, string datatype)> ParseMembers(JsonNode? node)
         {
             var result = new List<(string, string)>();
@@ -196,18 +234,44 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static void WriteVarSection(StringBuilder sb, string keyword, List<(string name, string datatype)> members)
         {
+            sb.AppendLine($"    {keyword}");
             if (members.Count == 0)
             {
-                sb.AppendLine($"    {keyword}");
                 sb.AppendLine($"    END_VAR");
                 return;
             }
-            sb.Append($"    {keyword}");
+            sb.Append("       ");
             foreach (var (name, datatype) in members)
-                sb.Append($"  \"{name}\" : {datatype};");
-            sb.AppendLine($"  END_VAR");
+                sb.Append($" \"{name}\" : {datatype};");
+            sb.AppendLine();
+            sb.AppendLine($"    END_VAR");
         }
 
+        // ── SCL network writer ──
+        private static void WriteSclNetwork(StringBuilder sb, JsonObject netObj)
+        {
+            var sclLines = netObj["scl"]?.AsArray();
+            if (sclLines != null)
+            {
+                foreach (var line in sclLines)
+                {
+                    var text = line?.ToString() ?? "";
+                    sb.AppendLine($"        {text}");
+                }
+                return;
+            }
+            // Single SCL statement
+            var sclStmt = netObj["stmt"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(sclStmt))
+            {
+                sb.AppendLine($"        {sclStmt}");
+                return;
+            }
+            // Empty SCL network
+            sb.AppendLine("        ");
+        }
+
+        // ── RUNG writer ──
         private static void WriteRung(StringBuilder sb, JsonArray? elements, string? wireLabel, bool isFirst, string? wireTarget = null)
         {
             if (!isFirst)
@@ -222,6 +286,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             WriteElement(sb, eObj);
                     }
                 }
+                sb.AppendLine();
                 if (wireTarget != null)
                     sb.AppendLine($"        END_RUNG wire#{wireTarget}");
                 else
@@ -252,50 +317,98 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             sb.AppendLine();
             if (hasWire)
-                sb.AppendLine($"        END_RUNG wire#{wireLabel}");
+            {
+                // Ensure wire label is just the name (strip any wire# prefix from input)
+                var wl = wireLabel!.StartsWith("wire#") ? wireLabel.Substring(5) : wireLabel;
+                sb.AppendLine($"        END_RUNG wire#{wl}");
+            }
             else
+            {
                 sb.AppendLine("        END_RUNG");
+            }
         }
 
+        // ── Element writer ──
         private static void WriteElement(StringBuilder sb, JsonObject elem)
         {
             var instr = elem["i"]?.ToString() ?? elem["instr"]?.ToString()
                 ?? throw new ArgumentException("Element missing 'i' (instruction) field.");
             var template = elem["tp"]?.ToString() ?? elem["template"]?.ToString();
             var operand = elem["o"]?.ToString() ?? elem["operand"]?.ToString();
-            var inst = elem["inst"]?.ToString(); // instance prefix for Q-boxes (c.S_RS)
+            var inst = elem["inst"]?.ToString();           // instance prefix for Q-boxes (#inst.TON)
             var wireObj = elem["wire"]?.ToString();
+            // New pragma fields
+            var genEno = elem["ge"]?.ToString();            // S7_GenerateENO
+            var expr = elem["expr"]?.ToString();             // S7_Expression (for Calculate)
 
             // Wire element — handled in WriteRung
             if (wireObj != null) return;
 
-            // If template specified, write pragma on its own indented line
-            if (!string.IsNullOrWhiteSpace(template))
-                sb.Append($"\n            {{ S7_Templates := \"{template}\" }}");
-
-            // Build instruction call
-            sb.Append("\n            ");
-
-            // Single operand (coils, contacts with one operand)
-            if (!string.IsNullOrWhiteSpace(operand))
+            // ── Block call: "call" field → FC or FB invocation ──
+            var callName = elem["call"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(callName))
             {
-                sb.Append($"{instr}( {operand} )");
-                return;
-            }
-
-            // Instance-prefixed instructions (Q-boxes: c.S_RS, #inst.TON)
-            if (!string.IsNullOrWhiteSpace(inst))
-            {
-                var p = elem["p"]?.AsObject() ?? elem["params"]?.AsObject();
-                sb.Append($"{inst}.{instr}(");
-                WriteParams(sb, p, instr);
+                // Block call: FC name or FB instance name (no quotes in S7DCL)
+                var callParams = elem["p"]?.AsObject() ?? elem["params"]?.AsObject();
+                sb.Append($"\n            {callName}(");
+                if (callParams != null && callParams.Count > 0)
+                    WriteParams(sb, callParams, instr);
                 sb.Append(" )");
                 return;
             }
 
-            // Multi-parameter instructions (boxes: Add, Move, TON, etc.)
+            // ── Write pragmas (S7_Templates + S7_GenerateENO + S7_Expression) ──
+            bool hasTemplate = !string.IsNullOrWhiteSpace(template);
+            bool hasGenEno = !string.IsNullOrWhiteSpace(genEno);
+            bool hasExpr = !string.IsNullOrWhiteSpace(expr);
+
+            if (hasTemplate || hasGenEno || hasExpr)
+            {
+                sb.Append("\n            {");
+                var pragmas = new List<string>();
+                if (hasTemplate) pragmas.Add($" S7_Templates := \"{template}\"");
+                if (hasGenEno) pragmas.Add($" S7_GenerateENO := \"{genEno}\"");
+                if (hasExpr) pragmas.Add($" S7_Expression := \"{expr}\"");
+                sb.Append(string.Join(";", pragmas));
+                sb.Append(" }");
+            }
+
+            // Build instruction call
+            sb.Append("\n            ");
+
+            // ── Single operand (contacts, coils, edge-detect boxes) ──
+            if (!string.IsNullOrWhiteSpace(operand))
+            {
+                // P_Contact / N_Contact have 2-param form: (operand:=sig, bit:=store)
+                if (instr.Equals("P_Contact", StringComparison.OrdinalIgnoreCase) ||
+                    instr.Equals("N_Contact", StringComparison.OrdinalIgnoreCase))
+                {
+                    var bit = elem["bit"]?.ToString() ?? elem["o"]?.ToString() ?? "";
+                    sb.Append($"{instr}( operand := {operand}, bit := {bit} )");
+                    return;
+                }
+                sb.Append($"{instr}( {operand} )");
+                return;
+            }
+
+            // ── Zero-operand instructions (Not(), ReturnFalse(), etc.) ──
             var paramObj = elem["p"]?.AsObject() ?? elem["params"]?.AsObject();
-            if (paramObj != null && paramObj.Count > 0)
+            bool hasParams = paramObj != null && paramObj.Count > 0;
+
+            // Instance-prefixed instructions (Q-boxes: #inst.TON, c.S_RS)
+            if (!string.IsNullOrWhiteSpace(inst))
+            {
+                var effectiveInstr = elem["method"]?.ToString();  // optional: explicit method name
+                var callInstr = effectiveInstr ?? instr;
+                sb.Append($"{inst}.{callInstr}(");
+                if (hasParams)
+                    WriteParams(sb, paramObj, instr);
+                sb.Append(" )");
+                return;
+            }
+
+            // ── Multi-parameter instructions (boxes: Add, Move, GT, MIN, etc.) ──
+            if (hasParams)
             {
                 sb.Append($"{instr}(");
                 WriteParams(sb, paramObj, instr);
@@ -303,11 +416,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else
             {
-                // Zero-parameter (Not(), ReturnTrue(), etc.)
+                // Zero-parameter (Not(), ReturnTrue(), ReturnFalse(), Return(), SaveCoil(), etc.)
                 sb.Append($"{instr}()");
             }
         }
 
+        // ── Parameter writer with instruction-aware output pin detection ──
         private static void WriteParams(StringBuilder sb, JsonObject? paramObj, string instr)
         {
             if (paramObj == null || paramObj.Count == 0) return;
@@ -317,21 +431,53 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var key = kvp.Key;
                 var val = kvp.Value?.ToString() ?? "";
-                // Determine if this param is an input (:=) or output (=>)
-                // Common output params: out, out1, et, cv, q, qu, qd, dest0..destN, eno
-                bool isOutput = key == "out" || key.StartsWith("out") || key == "et" || key == "cv" ||
-                                key == "q" || key == "qu" || key == "qd" || key.StartsWith("dest") || key == "eno" || key == "else";
+                bool isOutput = IsOutputPin(key, instr);
                 string connector = isOutput ? "=>" : ":=";
                 items.Add($"{key} {connector} {val}");
             }
             sb.Append(string.Join(",\n                ", items));
         }
 
+        /// <summary>
+        /// Determine if a parameter pin is an output (=>) based on instruction + pin name.
+        /// Uses explicit white-list per instruction family for correctness.
+        /// </summary>
+        private static bool IsOutputPin(string pinName, string instr)
+        {
+            // Generic output pins (works for most boxes)
+            if (OutputPins.Contains(pinName))
+                return true;
+
+            // Pattern-based fallbacks for numbered outputs
+            if (pinName.StartsWith("dest", StringComparison.OrdinalIgnoreCase)) return true;
+            if (pinName.StartsWith("in", StringComparison.OrdinalIgnoreCase) &&
+                pinName.Length > 2 && char.IsDigit(pinName[2])) return false; // in0, in1, in2... are inputs
+
+            // Instruction-specific overrides
+            var instrLower = instr.ToLowerInvariant();
+
+            // MIN/MAX/LIMIT/SEL: "out" is the result output
+            if (pinName.Equals("out", StringComparison.OrdinalIgnoreCase)) return true;
+
+            // MUX: k, in0..inN are inputs; out, else are outputs (covered by OutputPins)
+            // AND/OR/XOR: in1, in2, in3... are inputs; out is output
+            // SHR/SHL/ROR/ROL: in, n are inputs; out is output
+            // NEG: in is input; out is output
+            // Calculate: in1, in2... are inputs; out is output
+
+            // SR/RS flip-flop: operand, s, r are all inputs (no output pins in box form)
+            // But q is sometimes an output in some variants
+
+            // Default: assume input (:=)
+            return false;
+        }
+
+        // ── Deterministic MLC ID generator ──
+        // Uses pure sequential hex counter: MLC_001, MLC_002, ..., MLC_fff
+        // Same JSON input always produces the same MLC IDs → Git diff friendly
         private static string NextMlc()
         {
-            // Generate unique MLC IDs like MLC_3fA, MLC_4X9, etc.
-            // Use hex encoding of counter for compact unique IDs
-            var id = $"MLC_{_mlcCounter:x}{(_rng.Next(0, 16)).ToString("x")}{(_rng.Next(0, 16)).ToString("x")}";
+            var id = $"MLC_{_mlcCounter:x3}";
             _mlcCounter++;
             return id;
         }

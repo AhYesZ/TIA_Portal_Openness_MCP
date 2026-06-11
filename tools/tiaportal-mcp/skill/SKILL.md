@@ -53,10 +53,38 @@ CompileSoftware("PLC_1")
 - ❌ 用 ComposePlcLadFcBlockXml（不支持触点/线圈/定时器/计数器）
 - ❌ 跳过 dryRun 直接生成
 - ❌ 跳过 ValidateS7dclDocuments 直接导入
+- ❌ **使用 Allen-Bradley/Rockwell 语法**（XIC/XIO/OTE/OTL/OTU/XIO/ONS/OSR/OSF/NEQ/GRT/LES/LEQ/GEQ/MEQ/LIM/CMP — 这些都是 A-B RSLogix 指令，Siemens S7DCL 中不存在！）
+- ❌ **使用 Modicon/Schneider 语法**（LD/LDI/AND/ANI/OR/ORI/OUT/SET/RST — 这些是 Modicon/Mitsubishi 指令！）
+- ❌ **使用 Mitsubishi 语法**（LD/LDI/AND/ANI/OR/ORI/OUT/SET/RST/PLS/PLF — Siemens S7DCL 不存在！）
+- ❌ **使用全大写指令名**（`MOVE`/`ADD`/`SUB`/`MUL`/`DIV` — 正确应为 PascalCase: `Move`/`Add`/`Sub`/`Mul`/`Div`）
+- ❌ **SCL 代码写入 LAD 网络**（`:=`/`IF`/`FOR`/`WHILE`/`CASE`/`//` 注释不能出现在 LAD 网络内，只能用 SCL 网络 `{ S7_Language := "SCL" }`）
+
+## ⚠️ 厂商语法混淆警告（生成前自查）
+AI 模型容易混淆不同 PLC 厂商的梯形图语法。生成 S7DCL 前对照此表：
+| 其他厂商语法（非法！） | 厂商 | 正确的 S7DCL |
+|------------------------|------|-------------|
+| `XIC( addr )` | Allen-Bradley | `Contact( addr )` |
+| `XIO( addr )` | Allen-Bradley | `I_Contact( addr )` |
+| `OTE( addr )` | Allen-Bradley | `Coil( addr )` |
+| `OTL( addr )` | Allen-Bradley | `S_Coil( addr )` |
+| `OTU( addr )` | Allen-Bradley | `R_Coil( addr )` |
+| `ONS( addr )` | Allen-Bradley | `P_Trig( addr )` |
+| `OSR( addr )` | Allen-Bradley | `P_Trig( addr )` |
+| `OSF( addr )` | Allen-Bradley | `N_Trig( addr )` |
+| `MOVE(IN:=, OUT:=)` | 全大写变体 | `Move(in:=, out1=>)` |
+| `LD` / `LDI` / `AND` / `ANI` | Mitsubishi/Modicon | `Contact` / `I_Contact` 串联 |
+| `OR` / `ORI` | Mitsubishi/Modicon | `wire#` 并联分支 |
+| `OUT` / `SET` / `RST` | Mitsubishi/Modicon | `Coil` / `S_Coil` / `R_Coil` |
+| `%MW` / `%MF` / `%MD` | Modicon | Siemens 绝对地址 `%MW`/`%MD` 或符号变量 |
 
 ## Claude Code 最容易犯的错（生成前对照检查）
 | 错误 | 正确 |
 |------|------|
+| `XIC( addr )` | `Contact( addr )` ← **厂商混淆 #1!** |
+| `XIO( addr )` | `I_Contact( addr )` ← **厂商混淆 #2!** |
+| `OTE( addr )` | `Coil( addr )` ← **厂商混淆 #3!** |
+| `OTL( addr )` / `OTU( addr )` | `S_Coil( addr )` / `R_Coil( addr )` |
+| `MOVE(IN:=, OUT:=)` | `Move(in:=, out1=>)` ← **全大写!** |
 | `timeType := Time` | `time_type := Time` |
 | `countType := DInt` | `value_type := Int` |
 | `CMP >=(in1:=, in2:=)` | `GT(in1:=, in2:=, out=>)` |
@@ -64,6 +92,8 @@ CompileSoftware("PLC_1")
 | LAD 计数器 `cu:=` 显式赋值 | P_Trig 驱动，小写 r/pv/cv |
 | 变量 `#SET` 无引号 | `#"SET"` |
 | 改 .s7dcl 不管 .s7res | 同步 .s7res |
+| SCL `IF`/`:=`/`//` 写进 LAD 网络 | 用 `{ S7_Language := "SCL" }` 独立网络 |
+| 手写 .s7dcl 文本 | 用 BuildS7dclLadBlock JSON 生成 |
 
 # TIA Portal Project Automation (V20/V21)
 

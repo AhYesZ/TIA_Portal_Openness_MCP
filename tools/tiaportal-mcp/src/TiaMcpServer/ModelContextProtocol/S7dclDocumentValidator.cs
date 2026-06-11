@@ -95,10 +95,52 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly Regex EnUsRegex = new(@"en-US:", RegexOptions.Compiled);
         private static readonly Regex JumpReturnRegex = new(@"\b(JumpCoil|I_JumpCoil|ReturnCoil|ReturnFalse|ReturnTrue|Return|JumpList|Switch)\s*\(", RegexOptions.Compiled);
 
-        // Trap detection: wire# directly between a Contact (or other rung-in) and a Box call
+        // Trap detection: wire# directly between a Contact (or other rung-in) and an ENO-Box
+        // (ENO-boxes take EN input; Coil/S_Coil/R_Coil after wire# is valid parallel-OR)
         private static readonly Regex ContactThenWireThenBoxRegex = new(
-            @"(Contact|I_Contact|P_Contact|N_Contact|GT_Contact|LT_Contact|EQ_Contact|NE_Contact|GE_Contact|LE_Contact)\s*\([^)]*\)\s*\n\s*wire#[a-zA-Z_][a-zA-Z0-9_]*\s*\n\s*(Add|Sub|Mul|Div|Mod|Move|Convert|Calculate|TP|TON|TOF|TONR|Ctu|Ctd|Ctud)",
+            @"(Contact|I_Contact|P_Contact|N_Contact|GT_Contact|LT_Contact|EQ_Contact|NE_Contact|GE_Contact|LE_Contact)\s*\([^)]*\)\s*\n\s*wire#[a-zA-Z_][a-zA-Z0-9_]*\s*\n\s*(Add|Sub|Mul|Div|Mod|Move|Convert|Calculate|TP|TON|TOF|TONR|Ctu|Ctd|Ctud|MIN|MAX|LIMIT|SEL|MUX|SHR|SHL|ROR|ROL|AND|OR|XOR|INV|NEG|GT|LT|EQ|NE|GE|LE)\s*\(",
             RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
+
+        // ── Vendor confusion: instructions that belong to OTHER PLC vendors ──
+        // Allen-Bradley / Rockwell RSLogix 500/5000
+        private static readonly HashSet<string> AllenBradleyInstructions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "XIC", "XIO", "OTE", "OTL", "OTU", "ONS", "OSR", "OSF",
+            "NEQ", "GRT", "LES", "LEQ", "GEQ", "MEQ", "LIM", "CMP",
+            "ADD", "SUB", "MUL", "DIV", "MOV", "CPT", "JSR", "SBR", "RET",
+            "TON", "TOF", "RTO", "CTU", "CTD", "RES"
+        };
+
+        // Modicon / Schneider Electric
+        private static readonly HashSet<string> ModiconInstructions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "LD", "LDI", "AND", "ANI", "OR", "ORI", "OUT",
+            "SET", "RST", "PLS", "PLF", "MPS", "MRD", "MPP",
+            "MC", "MCR", "NOP", "END"
+        };
+
+        // Note: Some A-B/Modicon names collide with Siemens (TON, TOF, CTU, CTD, ADD, SUB, MUL, DIV, AND, OR, SET).
+        // The vendor check only fires when the instruction is NOT in our known-Siemens set,
+        // so a Siemens-valid "TON" won't be flagged.
+
+        // ── ALL-CAPS instruction detection (Siemens S7DCL uses PascalCase) ──
+        private static readonly Regex AllCapsInstructionRegex = new(
+            @"\b(MOVE|ADD_?AUTO|SUB_?AUTO|MUL_?AUTO|DIV_?AUTO|NEG_?AUTO|CONVERT|CALCULATE|SELECT|LIMIT_|MUX_)\s*\(",
+            RegexOptions.Compiled);
+
+        // ── SCL-in-LAD trap: SCL patterns inside LAD networks ──
+        private static readonly Regex SclAssignmentInLadRegex = new(
+            @"#\w+\s*:=\s*", RegexOptions.Compiled);  // #Var := ... (SCL assignment, not valid in LAD RUNG)
+
+        private static readonly Regex SclIfInLadRegex = new(
+            @"\b(IF|THEN|ELSE|ELSIF|END_IF|FOR|WHILE|DO|END_FOR|END_WHILE|CASE|OF|END_CASE|RETURN|EXIT|CONTINUE)\b",
+            RegexOptions.Compiled);
+
+        private static readonly Regex SclCommentInLadRegex = new(
+            @"//[^\n]*", RegexOptions.Compiled);  // // comment (SCL style, not valid in LAD)
+
+        private static readonly Regex SclBeginInLadRegex = new(
+            @"\bBEGIN\b", RegexOptions.Compiled);  // BEGIN...END_FUNCTION (SCL body, not LAD)
 
         static S7dclDocumentValidator()
         {
@@ -340,13 +382,44 @@ namespace TiaMcpServer.ModelContextProtocol
                         if (instr == "RUNG" || instr == "END_RUNG" || instr == "END_NETWORK" ||
                             instr == "NETWORK" || instr == "VAR" || instr == "END_VAR")
                             continue;
+
+                        // ── Vendor confusion trap (陷阱#32) ──
+                        if (AllenBradleyInstructions.Contains(instr) && !AllKnownInstructions.Contains(instr))
+                            AddCheck("vendor", "fail", $"{baseName}:{netLabel}: '{instr}' is Allen-Bradley/Rockwell RSLogix syntax — NOT valid Siemens S7DCL! 正确: Contact/I_Contact/Coil/S_Coil/R_Coil/P_Trig. (陷阱#32-AB)");
+                        if (ModiconInstructions.Contains(instr) && !AllKnownInstructions.Contains(instr))
+                            AddCheck("vendor", "fail", $"{baseName}:{netLabel}: '{instr}' is Modicon/Mitsubishi syntax — NOT valid Siemens S7DCL! (陷阱#32-MOD)");
+
                         if (!AllKnownInstructions.Contains(instr) && !KnownZeroOpCoils.Contains(instr))
                             AddCheck("instr", "warn", $"{baseName}:{netLabel}: Unknown instruction '{instr}' — verify syntax or export real block with ExportBlocksAsDocuments. (陷阱#9)");
+                    }
+
+                    // ── ALL-CAPS instruction trap (陷阱#33) ──
+                    var allCapsMatch = AllCapsInstructionRegex.Match(netContent);
+                    if (allCapsMatch.Success)
+                        AddCheck("instr", "fail", $"{baseName}:{netLabel}: '{allCapsMatch.Groups[1].Value}' is ALL-CAPS — Siemens S7DCL uses PascalCase (Move/Add/Sub, NOT MOVE/ADD/SUB). (陷阱#33)");
+
+                    // ── SCL-in-LAD detection (陷阱#34-#37) ──
+                    // Only check in LAD networks (not SCL)
+                    var isSclNetwork = Regex.IsMatch(netContent, @"S7_Language\s*:=\s*""SCL""");
+                    if (!isSclNetwork)
+                    {
+                        if (SclAssignmentInLadRegex.IsMatch(netContent))
+                            AddCheck("scl-in-lad", "fail", $"{baseName}:{netLabel}: SCL assignment ':=' found in LAD network — use RUNG/END_RUNG with Contact/Coil/Box instead. (陷阱#34)");
+                        if (SclIfInLadRegex.IsMatch(netContent))
+                            AddCheck("scl-in-lad", "fail", $"{baseName}:{netLabel}: SCL control flow (IF/FOR/WHILE/CASE/RETURN) found in LAD network — use {{ S7_Language := \"SCL\" }} network instead. (陷阱#35)");
+                        if (SclCommentInLadRegex.IsMatch(netContent))
+                            AddCheck("scl-in-lad", "fail", $"{baseName}:{netLabel}: SCL-style comment '//' found in LAD network — use MLC for comments, not //. (陷阱#36)");
                     }
 
                     // ── Trap #1: Contact → wire# → Box ──
                     if (ContactThenWireThenBoxRegex.IsMatch(netContent))
                         AddCheck("trap", "warn", $"{baseName}:{netLabel}: Possible Contact→wire#→Box pattern — wire# between Contact and Box may break EN connection. (陷阱#1)");
+
+                    // ── Trap #19/20: Negated() / Not() at RUNG start ──
+                    if (Regex.IsMatch(netContent, @"Negated\s*\("))
+                        AddCheck("trap", "fail", $"{baseName}:{netLabel}: Negated() does not exist in S7DCL — use I_Contact or Contact→Not. (陷阱#19)");
+                    if (Regex.IsMatch(netContent, @"RUNG\s+wire#powerrail\s*\n\s*Not\s*\("))
+                        AddCheck("trap", "fail", $"{baseName}:{netLabel}: Not() at RUNG start — LAD requires preceding Contact. (陷阱#20)");
                 }
             }
 
@@ -394,15 +467,14 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var startIdx = matches[i].Index;
                 var endIdx = (i + 1 < matches.Count) ? matches[i + 1].Index : content.Length;
-                // Include text from the pragma before NETWORK up to just before next NETWORK
-                // Walk back to find the opening { pragma
+                // Walk back to include the { S7_Language ... } pragma block before NETWORK
                 var segStart = startIdx;
                 var before = content.Substring(0, startIdx);
-                var lastPragma = before.LastIndexOf("{ S7_Language");
+                var lastPragma = before.LastIndexOf("{ S7_Language", StringComparison.Ordinal);
                 if (lastPragma >= 0)
                 {
-                    var fromPragmaToNetwork = before.Substring(lastPragma);
-                    if (fromPragmaToNetwork.IndexOf("NETWORK", StringComparison.Ordinal) > 0 && !fromPragmaToNetwork.Contains("\nNETWORK"))
+                    // Verify the pragma is reasonably close (within 200 chars)
+                    if (startIdx - lastPragma < 200)
                         segStart = lastPragma;
                 }
                 networks.Add(content.Substring(segStart, Math.Min(endIdx - segStart, content.Length - segStart)));
