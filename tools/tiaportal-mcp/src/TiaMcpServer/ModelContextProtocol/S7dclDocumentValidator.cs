@@ -10,9 +10,10 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
     /// Offline validator for SIMATIC SD (.s7dcl + .s7res) LAD document pairs.
-    /// Checks UTF-8 BOM (REQUIRED—TIA exports all carry EF BB BF), block declarations, network pragmas, MLC cross-references,
+    /// Checks UTF-8 BOM status, block declarations, network pragmas, MLC cross-references,
     /// wire consistency, known instructions, and common trap patterns — all without
     /// connecting to TIA Portal.
+    /// .s7res is only required when .s7dcl contains MLC references (matching TIA export).
     ///
     /// Based on Siemens spec Entry ID 109994073 §4 Instructions.
     /// </summary>
@@ -240,22 +241,40 @@ namespace TiaMcpServer.ModelContextProtocol
                 var baseName = kvp.Key;
                 var (s7dclPath, s7resPath) = kvp.Value;
 
+                // .s7res without .s7dcl is always an error
                 if (s7dclPath == null)
+                {
                     AddCheck("files", "fail", $"{baseName}: .s7res found but .s7dcl is missing.");
-                if (s7resPath == null)
-                    AddCheck("files", "fail", $"{baseName}: .s7dcl found but .s7res is missing.");
-                if (s7dclPath == null || s7resPath == null)
                     continue;
+                }
 
                 string? s7dclContent = null;
                 string? s7resContent = null;
 
                 // ── UTF-8 BOM check ──
+                // TIA-exported reference files do NOT carry BOM; we report status neutrally
                 s7dclContent = CheckBom(s7dclPath, baseName, ".s7dcl", AddCheck);
-                s7resContent = CheckBom(s7resPath, baseName, ".s7res", AddCheck);
 
-                if (s7dclContent == null || s7resContent == null)
+                if (s7dclContent == null) continue;
+
+                // ── Check if .s7dcl contains MLC references ──
+                var mlcIdsInDcl = new HashSet<string>();
+                foreach (Match m in MlcRefRegex.Matches(s7dclContent))
+                    mlcIdsInDcl.Add(m.Value);
+                bool dclHasMlc = mlcIdsInDcl.Count > 0;
+
+                // .s7res only required if .s7dcl has MLC (matches TIA export behavior)
+                if (s7resPath == null)
+                {
+                    if (dclHasMlc)
+                        AddCheck("files", "fail", $"{baseName}: .s7dcl has {mlcIdsInDcl.Count} MLC references but .s7res is missing.");
+                    else
+                        AddCheck("files", "pass", $"{baseName}: No .s7res needed (no MLC in .s7dcl, matches TIA export).");
                     continue;
+                }
+
+                s7resContent = CheckBom(s7resPath, baseName, ".s7res", AddCheck);
+                if (s7resContent == null) continue;
 
                 // ── Block declaration ──
                 var blockMatch = BlockDeclRegex.Match(s7dclContent);
@@ -267,15 +286,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     var blockName = blockMatch.Groups[2].Value;
                     AddCheck("block", "pass", $"{baseName}: {blockType} \"{blockName}\" declared.");
 
-                    // ── Timer in FC Temp check ──
-                    if (blockType == "FUNCTION" && s7dclContent.Contains("TON_TIME") || s7dclContent.Contains("TON(") || s7dclContent.Contains("TONR"))
-                        AddCheck("block", "warn", $"{baseName}: FC \"{blockName}\" may declare TON_TIME in VAR_TEMP — must be in FB VAR (Static). (陷阱#2)");
+                    // ── Timer in FC Temp check (only applies to FUNCTION, not FUNCTION_BLOCK) ──
+                    if (blockType == "FUNCTION" && (s7dclContent.Contains("TON_TIME") || s7dclContent.Contains("TON(") || s7dclContent.Contains("TONR")))
+                        AddCheck("block", "warn", $"{baseName}: FC \"{blockName}\" uses TON/TONR/TON_TIME — must be in FB VAR (Static). (陷阱#2)");
                 }
-
-                // ── Find all MLC references in .s7dcl ──
-                var mlcIdsInDcl = new HashSet<string>();
-                foreach (Match m in MlcRefRegex.Matches(s7dclContent))
-                    mlcIdsInDcl.Add(m.Value);
 
                 // ── Parse .s7res for MLC entries ──
                 var mlcIdsInRes = new Dictionary<string, bool>(); // id → hasZhCn
@@ -440,13 +454,14 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var bytes = File.ReadAllBytes(path);
                 bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-                if (!hasBom)
+                if (hasBom)
                 {
-                    addCheck("file", "fail", $"{baseName}{ext}: Missing UTF-8 BOM. TIA-exported reference files all carry EF BB BF — BOM is required for import. (陷阱#3)");
-                    return Encoding.UTF8.GetString(bytes);
+                    // Match TIA export behavior: BOM is NOT required, but present is fine
+                    addCheck("file", "pass", $"{baseName}{ext}: UTF-8 BOM present (TIA exports without BOM — both accepted).");
+                    return Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
                 }
-                addCheck("file", "pass", $"{baseName}{ext}: UTF-8 BOM present.");
-                return Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
+                addCheck("file", "pass", $"{baseName}{ext}: UTF-8 without BOM (matches TIA export format).");
+                return Encoding.UTF8.GetString(bytes);
             }
             catch (Exception ex)
             {
@@ -465,14 +480,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 var startIdx = matches[i].Index;
                 var endIdx = (i + 1 < matches.Count) ? matches[i + 1].Index : content.Length;
                 // Walk back to include the { S7_Language ... } pragma block before NETWORK
+                // Use regex to match both single-line and multi-line pragmas
                 var segStart = startIdx;
                 var before = content.Substring(0, startIdx);
-                var lastPragma = before.LastIndexOf("{ S7_Language", StringComparison.Ordinal);
-                if (lastPragma >= 0)
+                var pragmaMatch = NetworkPragmaRegex.Match(before);
+                // Find the LAST pragma before this NETWORK (closest one)
+                var lastPragmaIdx = -1;
+                var pragmaRegex = new Regex(@"\{\s*S7_Language\s*:=\s*""(LAD|SCL|FBD|STL)""", RegexOptions.RightToLeft);
+                var lastPragma = pragmaRegex.Match(before);
+                if (lastPragma.Success)
                 {
-                    // Verify the pragma is reasonably close (within 200 chars)
-                    if (startIdx - lastPragma < 200)
-                        segStart = lastPragma;
+                    lastPragmaIdx = lastPragma.Index;
+                    // Verify the pragma is reasonably close (within 300 chars for multi-line)
+                    if (startIdx - lastPragmaIdx < 300)
+                        segStart = lastPragmaIdx;
                 }
                 networks.Add(content.Substring(segStart, Math.Min(endIdx - segStart, content.Length - segStart)));
             }

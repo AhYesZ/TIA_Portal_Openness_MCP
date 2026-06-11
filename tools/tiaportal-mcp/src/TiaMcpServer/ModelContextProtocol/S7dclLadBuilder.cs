@@ -9,11 +9,11 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
     /// Offline builder: JSON → .s7dcl + .s7res LAD document pair.
-    /// Generates UTF-8 with BOM files suitable for TIA Portal version-controller workspace import.
+    /// Generates UTF-8 WITHOUT BOM files (matching TIA-exported reference files).
     ///
     /// Based on Siemens spec Entry ID 109994073 and verified round-trip on TIA V21
     /// against FB_CompleteInstructionGallery (67 networks, 0 errors).
-    /// BOM is REQUIRED — TIA-exported reference files all carry EF BB BF.
+    /// TIA-exported reference files do NOT carry EF BB BF — we match that.
     /// </summary>
     public static class S7dclLadBuilder
     {
@@ -46,10 +46,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 ?? throw new ArgumentException("blockName is required.");
             var blockNumber = root["blockNumber"]?.GetValue<int>() ?? root["num"]?.GetValue<int>() ?? 0;
             var comment = root["comment"]?.ToString() ?? root["c"]?.ToString() ?? "";
-            var title = root["title"]?.ToString() ?? root["t"]?.ToString() ?? blockName;
+            var title = root["title"]?.ToString() ?? root["t"]?.ToString() ?? "";
 
             var inputs = ParseMembers(root["inputs"] ?? root["i"]);
             var outputs = ParseMembers(root["outputs"] ?? root["o"]);
+            var inouts = ParseMembers(root["inouts"] ?? root["io"]);
             var statics = ParseMembers(root["statics"] ?? root["s"]);
 
             var networksJson = root["networks"]?.AsArray() ?? root["nw"]?.AsArray()
@@ -60,22 +61,33 @@ namespace TiaMcpServer.ModelContextProtocol
 
             var mlcMap = new Dictionary<string, string>(); // MLC_ID → zh-CN text
 
-            var blockCommentMlc = NextMlc();
-            var blockTitleMlc = NextMlc();
-            mlcMap[blockCommentMlc] = comment;
-            mlcMap[blockTitleMlc] = title;
+            // ── Block-level MLC: only when comment/title/number are explicitly provided ──
+            bool hasBlockComment = !string.IsNullOrWhiteSpace(comment);
+            bool hasBlockTitle = !string.IsNullOrWhiteSpace(title);
+            bool hasBlockNumber = blockNumber != 0;
+            bool blockHasMlc = hasBlockComment || hasBlockTitle;
+
+            string? blockCommentMlc = null;
+            string? blockTitleMlc = null;
+            if (hasBlockComment) { blockCommentMlc = NextMlc(); mlcMap[blockCommentMlc] = comment; }
+            if (hasBlockTitle) { blockTitleMlc = NextMlc(); mlcMap[blockTitleMlc] = title; }
 
             // ── Build .s7dcl ──
             var sb = new StringBuilder();
 
-            // UTF-8 with BOM — matches reference files exported from TIA (all have EF BB BF)
-            // Block pragma header
+            // Block pragma header — matches TIA reference format
             sb.AppendLine("{");
-            sb.AppendLine($"    S7_BlockComment := \"{blockCommentMlc}\";");
-            sb.AppendLine($"    S7_BlockNumber := \"{blockNumber}\";");
-            sb.AppendLine($"    S7_BlockTitle := \"{blockTitleMlc}\";");
+            if (hasBlockComment)
+                sb.AppendLine($"    S7_BlockComment := \"{blockCommentMlc}\";");
+            if (hasBlockNumber)
+                sb.AppendLine($"    S7_BlockNumber := \"{blockNumber}\";");
+            if (hasBlockTitle)
+                sb.AppendLine($"    S7_BlockTitle := \"{blockTitleMlc}\";");
             sb.AppendLine("    S7_Optimized := \"TRUE\";");
-            sb.AppendLine("    S7_PreferredLanguage := \"LAD\";");
+            if (blockKind != "db")
+                sb.AppendLine("    S7_PreferredLanguage := \"LAD\";");
+            else
+                sb.AppendLine("    S7_StandardRetain := \"FALSE\";");
             sb.AppendLine("    S7_Version := \"0.1\"");
             sb.AppendLine("}");
 
@@ -83,24 +95,31 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 case "fc":
                     sb.AppendLine($"FUNCTION \"{blockName}\" : Void");
-                    WriteVarSection(sb, "VAR_INPUT", inputs);
-                    WriteVarSection(sb, "VAR_OUTPUT", outputs);
+                    if (inputs.Count > 0) WriteVarSection(sb, "VAR_INPUT", inputs);
+                    if (outputs.Count > 0) WriteVarSection(sb, "VAR_OUTPUT", outputs);
+                    if (inouts.Count > 0) WriteVarSection(sb, "VAR_IN_OUT", inouts);
                     // Only emit VAR_TEMP for FC if it has SCL networks that need temp vars
                     if (HasSclNetworks(networksJson))
                         WriteVarSection(sb, "VAR_TEMP", new List<(string, string)>());
                     break;
                 case "fb":
                     sb.AppendLine($"FUNCTION_BLOCK \"{blockName}\"");
-                    WriteVarSection(sb, "VAR_INPUT", inputs);
-                    WriteVarSection(sb, "VAR_OUTPUT", outputs);
-                    WriteVarSection(sb, "VAR", statics);
+                    if (inputs.Count > 0) WriteVarSection(sb, "VAR_INPUT", inputs);
+                    if (outputs.Count > 0) WriteVarSection(sb, "VAR_OUTPUT", outputs);
+                    if (inouts.Count > 0) WriteVarSection(sb, "VAR_IN_OUT", inouts);
+                    if (statics.Count > 0) WriteVarSection(sb, "VAR", statics);
+                    // FB always has VAR_TEMP
                     WriteVarSection(sb, "VAR_TEMP", new List<(string, string)>());
                     break;
                 case "ob":
                     sb.AppendLine($"ORGANIZATION_BLOCK \"{blockName}\"");
                     break;
+                case "db":
+                    sb.AppendLine($"DATA_BLOCK \"{blockName}\"");
+                    if (statics.Count > 0) WriteVarSection(sb, "VAR", statics);
+                    break;
                 default:
-                    throw new ArgumentException($"Unknown blockKind: {blockKind}. Use fc, fb, or ob.");
+                    throw new ArgumentException($"Unknown blockKind: {blockKind}. Use fc, fb, ob, or db.");
             }
 
             // Networks
@@ -110,27 +129,53 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (netNode is not JsonObject netObj) continue;
                 netIdx++;
 
-                var netTitle = netObj["t"]?.ToString() ?? netObj["title"]?.ToString() ?? $"N{netIdx}";
+                var netTitle = netObj["t"]?.ToString() ?? netObj["title"]?.ToString() ?? "";
                 var netComment = netObj["c"]?.ToString() ?? netObj["comment"]?.ToString() ?? "";
                 var netLang = netObj["lang"]?.ToString() ?? "LAD";  // "LAD" or "SCL"
                 var elements = netObj["e"]?.AsArray() ?? netObj["elements"]?.AsArray();
                 var branches = netObj["b"]?.AsArray() ?? netObj["branches"]?.AsArray();
 
-                var netTitleMlc = NextMlc();
-                var netCommentMlc = NextMlc();
-                mlcMap[netTitleMlc] = netTitle;
-                mlcMap[netCommentMlc] = netComment;
+                // Network MLC: only when comment or title is explicitly provided
+                bool hasNetComment = !string.IsNullOrWhiteSpace(netComment);
+                bool hasNetTitle = !string.IsNullOrWhiteSpace(netTitle);
+                bool netHasMlc = hasNetComment || hasNetTitle;
+
+                string? netCommentMlc = null;
+                string? netTitleMlc = null;
+                if (hasNetComment) { netCommentMlc = NextMlc(); mlcMap[netCommentMlc] = netComment; }
+                if (hasNetTitle) { netTitleMlc = NextMlc(); mlcMap[netTitleMlc] = netTitle; }
 
                 // Reference format: only first network has blank line after END_VAR;
                 // consecutive networks have NO blank line between END_NETWORK and next pragma.
                 if (netIdx == 1)
                     sb.AppendLine();   // blank line after VAR section before first network
-                sb.AppendLine("    {");
-                sb.AppendLine($"        S7_Language := \"{netLang}\";");
-                // Reference order: S7_NetworkComment first, then S7_NetworkTitle (last line no semicolon)
-                sb.AppendLine($"        S7_NetworkComment := \"{netCommentMlc}\";");
-                sb.AppendLine($"        S7_NetworkTitle := \"{netTitleMlc}\"");
-                sb.AppendLine("    }");
+
+                if (netHasMlc)
+                {
+                    // Multi-line pragma with MLC (matches FB_CompleteInstructionGallery)
+                    // Rule: last line NO semicolon, all others have semicolons
+                    var pragmaLines = new List<string>();
+                    pragmaLines.Add($"        S7_Language := \"{netLang}\"");
+                    if (hasNetComment)
+                        pragmaLines.Add($"        S7_NetworkComment := \"{netCommentMlc}\"");
+                    if (hasNetTitle)
+                        pragmaLines.Add($"        S7_NetworkTitle := \"{netTitleMlc}\"");
+
+                    sb.AppendLine("    {");
+                    for (int i = 0; i < pragmaLines.Count; i++)
+                    {
+                        if (i == pragmaLines.Count - 1)
+                            sb.AppendLine(pragmaLines[i]);   // last line: no semicolon
+                        else
+                            sb.AppendLine(pragmaLines[i] + ";");
+                    }
+                    sb.AppendLine("    }");
+                }
+                else
+                {
+                    // Single-line pragma without MLC (matches TIA export 块_1)
+                    sb.AppendLine($"    {{ S7_Language := \"{netLang}\" }}");
+                }
                 sb.AppendLine("    NETWORK");
 
                 if (netLang.Equals("SCL", StringComparison.OrdinalIgnoreCase))
@@ -159,25 +204,32 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             sb.AppendLine(blockKind == "ob" ? "END_ORGANIZATION_BLOCK" :
-                          blockKind == "fb" ? "END_FUNCTION_BLOCK" : "END_FUNCTION");
-
-            // ── Build .s7res ──
-            var s7resSb = new StringBuilder();
-            s7resSb.AppendLine("MultiLingualTexts:");
-            foreach (var kvp in mlcMap)
-            {
-                s7resSb.AppendLine($"  - id: {kvp.Key}");
-                s7resSb.AppendLine($"    zh-CN: {kvp.Value}");
-            }
+                          blockKind == "fb" ? "END_FUNCTION_BLOCK" :
+                          blockKind == "db" ? "END_DATA_BLOCK" : "END_FUNCTION");
 
             // ── Write files ──
             Directory.CreateDirectory(outputDirectory);
             var s7dclPath = Path.Combine(outputDirectory, $"{blockName}.s7dcl");
             var s7resPath = Path.Combine(outputDirectory, $"{blockName}.s7res");
 
-            // Write WITH BOM — reference files from TIA (FC_FromRef, FB_CompleteInstructionGallery) all carry EF BB BF
-            File.WriteAllText(s7dclPath, sb.ToString(), new UTF8Encoding(true));
-            File.WriteAllText(s7resPath, s7resSb.ToString(), new UTF8Encoding(true));
+            var outputFiles = new JsonArray(s7dclPath);
+
+            // Write S7DCL WITHOUT BOM — matches TIA-exported reference files
+            File.WriteAllText(s7dclPath, sb.ToString(), new UTF8Encoding(false));
+
+            // Only generate .s7res when there are MLC references (matches TIA export behavior)
+            if (mlcMap.Count > 0)
+            {
+                var s7resSb = new StringBuilder();
+                s7resSb.AppendLine("MultiLingualTexts:");
+                foreach (var kvp in mlcMap)
+                {
+                    s7resSb.AppendLine($"  - id: {kvp.Key}");
+                    s7resSb.AppendLine($"    zh-CN: {kvp.Value}");
+                }
+                File.WriteAllText(s7resPath, s7resSb.ToString(), new UTF8Encoding(false));
+                outputFiles.Add(s7resPath);
+            }
 
             var result = new JsonObject
             {
@@ -189,10 +241,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["blockName"] = blockName,
                 ["blockNumber"] = blockNumber,
                 ["outputDirectory"] = outputDirectory,
-                ["outputFiles"] = new JsonArray(s7dclPath, s7resPath),
+                ["outputFiles"] = outputFiles,
                 ["mlcCount"] = mlcMap.Count,
                 ["networkCount"] = netIdx,
-                ["message"] = $"Generated {blockName}.s7dcl + .s7res (UTF-8 with BOM) in {outputDirectory}. Import with ImportBlocksFromDocuments or ImportFromDocuments."
+                ["hasS7res"] = mlcMap.Count > 0,
+                ["message"] = mlcMap.Count > 0
+                    ? $"Generated {blockName}.s7dcl + .s7res (UTF-8 with BOM, {mlcMap.Count} MLC entries) in {outputDirectory}. Import with ImportBlocksFromDocuments."
+                    : $"Generated {blockName}.s7dcl (UTF-8 with BOM, NO .s7res — no MLC needed, matches TIA export). Import with ImportBlocksFromDocuments."
             };
 
             return result;
