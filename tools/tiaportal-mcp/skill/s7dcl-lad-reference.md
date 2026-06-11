@@ -364,9 +364,55 @@ S_Cud(
 ```
 Simatic 计数器用 BCD 编码预设值（`C#100`），输出 `cv` 为整数，`cv_bcd` 为 BCD 格式。`q` 输出 = `cv > 0`。
 
-### 3.7 计数器 SCL 语法（混合 LAD/SCL 块）— ⚠️ LAD 不支持计数器输入引脚！
+### 3.7 计数器 — LAD（边沿触发）+ SCL 双模式
 
-S7DCL LAD 格式的 CTU/CTD/CTUD **不支持** `cu :=` / `r :=` / `cd :=` / `ld :=` 等输入引脚的 inline 赋值，也不支持通过 wire# 分支连接到这些引脚。必须在 SCL 网络中使用 IEC 方法调用语法：
+#### LAD 模式（带 P_Trig 边沿触发）— ⚠️ 小写引脚名！
+
+S7DCL LAD 中计数器可通过 P_Trig 边沿触发方式使用，模板为 `value_type := Int`，引脚名**小写**：
+
+```lad
+{ S7_Language := "LAD" }
+NETWORK
+    RUNG wire#powerrail
+        Contact( #"Trig" )
+        P_Trig( #"EdgeWorkCtu" )
+        { S7_Templates := "value_type := Int" }
+        #"ctuEdgeInst".CTU(
+            r := #"Reset",
+            pv := #"PresetValue",
+            cv => #"CTU_CV"
+        )
+        Coil( #"CTU_Q" )
+    END_RUNG
+END_NETWORK
+```
+
+**CTU LAD 规则**: `cu` 引脚由 P_Trig 的能流驱动（不显式赋值），`r` 复位输入，`pv` 预设值，`cv =>` 当前值输出，`Q` 通过 Coil 输出。
+
+```lad
+{ S7_Language := "LAD" }
+NETWORK
+    RUNG wire#powerrail
+        Contact( #"Trig" )
+        P_Trig( #"EdgeWorkCtd" )
+        { S7_Templates := "value_type := Int" }
+        #"ctdEdgeInst".CTD(
+            ld := #"LoadPv",
+            pv := #"PresetValue",
+            cv => #"CTD_CV"
+        )
+        Coil( #"CTD_Q" )
+    END_RUNG
+END_NETWORK
+```
+
+**CTD LAD 规则**: `cd` 由能流驱动，`ld` 加载预设值，`pv` 预设值。
+
+**CTUD LAD 规则**: `cu`/`cd` 由能流驱动（根据 CountDown 输入选方向），`r`/`ld`/`pv`/`qd =>`/`cv =>` 为显式引脚。
+
+> **LAD 计数器引脚命名对照**: LAD 中用**小写** (`r`, `pv`, `cv`, `ld`, `cd`, `qd`)，SCL 中用**大写** (`CU`, `R`, `PV`, `Q`, `CV` 等)。不可混用！
+
+#### SCL 模式（全引脚控制）
 
 ```scl
 { S7_Language := "SCL" }
@@ -550,12 +596,15 @@ MultiLingualTexts:
 | 20 | **Not() 放 RUNG 起始** | `不可将 NOT 运算连接到程序段` | 必须前有触点：Contact→Not→Coil |
 | 21 | **wire# 在 Contact 和 Box 之间** | `Pin 'en' missing` / `pre missing` | Box 必须直连前一个元素，无 wire# |
 | 22 | **两个 Box 同一 RUNG 串联** | ENO→EN 断开 | 拆成两个独立网络 |
-| 23 | **CTU/CTD/CTUD LAD 中 inline 赋值 cu/r** | 编译错误 | 改用 SCL 方法调用 `inst.CTU(CU:=...)` |
-| 24 | **Counter SCL 分步赋值** | 参数\"已使用\" | 全部引脚一个语句完成：`inst.CTU(CU:=...,R:=...,PV:=...,Q=>...,CV=>...)` |
+| 23 | **CTU/CTD/CTUD 计数器用大写在 LAD** | 编译错误 | LAD 用小写引脚名 `r`/`pv`/`cv`/`ld`/`cd`！SCL 才用大写 |
+| 24 | **Counter SCL 分步赋值** | 参数"已使用" | 全部引脚一个语句完成 |
 | 25 | **计数器 Static 类型用 IEC_COUNTER** | 类型错误 | 分别用 `CTU_INT`/`CTD_INT`/`CTUD_INT` |
 | 26 | **变量引用不用双引号** | 变量未定义 | `#"VarName"` 声明和引用都必须有双引号 |
 | 27 | **用了不存在的 CMP >= 盒语法** | 语法错误 | 比较盒用 `GT(in1:=, in2:=, out=>)` 非 `CMP >=` |
 | 28 | **.s7res 含多余 MLC 条目** | 导入失败 | .s7res 必须精确定义：只保留 .s7dcl 中实际引用的 MLC ID |
+| 29 | **CTU/CTD/CTUD 忘记 P_Trig 边沿** | 每周期计数 | LAD 计数器需 P_Trig 提供上升沿，否则每个扫描周期都计数 |
+| 30 | **FC 调用 EN 用 wire# 直连** | 看似违规，实则有效 | Block 调用可用 wire# 提供 EN（非 box 指令规则） |
+| 31 | **两个 Box 从 powerrail 串联** | 看似违规，实则有效 | 从 powerrail 起的双 Box（无 Contact 前置）ENO→EN 正常连接 |
 
 ---
 
