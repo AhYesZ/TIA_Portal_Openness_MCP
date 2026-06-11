@@ -396,17 +396,19 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!string.IsNullOrWhiteSpace(callName))
             {
                 // Block call: FC name or FB instance name — reference format with params indented
+                // Apply FormatVarRef so #FB_Inst becomes #"FB_Inst" (block-local)
+                var callRef = FormatVarRef(callName);
                 var callParams = elem["p"]?.AsObject() ?? elem["params"]?.AsObject();
                 var hasCallParams = callParams != null && callParams.Count > 0;
                 if (hasCallParams)
                 {
-                    sb.Append($"\r\n            {callName}(\r\n");
+                    sb.Append($"\r\n            {callRef}(\r\n");
                     WriteParams(sb, callParams, instr);
                     sb.Append("\r\n            )");
                 }
                 else
                 {
-                    sb.Append($"\r\n            {callName}( )");
+                    sb.Append($"\r\n            {callRef}( )");
                 }
                 return;
             }
