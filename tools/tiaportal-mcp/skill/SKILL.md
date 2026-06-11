@@ -638,6 +638,10 @@ For architecture reference and developer workflows, load skill `tia-mcp-dev`.
 | Q-box instance without #" prefix | `tonInst.TON(...)` — bare ref, not block-local | `#"tonInst".TON(...)` — instance var must use #"Name" |
 | .s7res always required assumption | TIA exports without .s7res when no MLC | Only generate .s7res when block/network have comments or titles |
 | Multi-param first param unindented | `Add(\nin1 := ...` — first param at col 0 | First param indent 16 spaces, matches subsequent params |
+| Move uses `in1`/`out` pin names | Wrong pin names: Move input is `in`, output is `out1` | `Move(in:=#Src, out1=>#Dst)` — see FB_CompleteInstructionGallery ref |
+| TON with only 2 pins (pt+q) | TIA requires ALL 3 pins: pt, q, **et** | Always connect `et` even if unused: declare `tonET:Time` static |
+| TON with only 2 pins (pt+et) | TIA requires ALL 3 pins: pt, **q**, et | Always connect `q` even if unused |
+| Block call params single-line | TIA import may reject single-line FC/FB calls | Use multi-line: `"FC_Name"(\n    param := ...,\n    ...\n)` |
 
 ## 12. Claude Code LAD Internal Errors (AI Confusion Patterns)
 
