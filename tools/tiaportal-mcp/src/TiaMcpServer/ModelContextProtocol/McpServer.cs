@@ -7707,7 +7707,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                             try
                             {
-                                var missingIds = GetResMissingEnUsIds(importPath, name);
+                                var missingIds = (List<string>?)null;
                                 if (missingIds != null && missingIds.Count > 0)
                                 {
                                     scanWarnings.Add(new JsonObject

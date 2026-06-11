@@ -10,7 +10,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
     /// Offline validator for SIMATIC SD (.s7dcl + .s7res) LAD document pairs.
-    /// Checks UTF-8 BOM, block declarations, network pragmas, MLC cross-references,
+    /// Checks UTF-8 BOM (REQUIRED—TIA exports all carry EF BB BF), block declarations, network pragmas, MLC cross-references,
     /// wire consistency, known instructions, and common trap patterns — all without
     /// connecting to TIA Portal.
     ///
@@ -442,7 +442,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
                 if (!hasBom)
                 {
-                    addCheck("file", "warn", $"{baseName}{ext}: No UTF-8 BOM — reference files from TIA export have no BOM. Verify TIA ImportBlocksFromDocuments accepts the file. (陷阱#3)");
+                    addCheck("file", "fail", $"{baseName}{ext}: Missing UTF-8 BOM. TIA-exported reference files all carry EF BB BF — BOM is required for import. (陷阱#3)");
                     return Encoding.UTF8.GetString(bytes);
                 }
                 addCheck("file", "pass", $"{baseName}{ext}: UTF-8 BOM present.");

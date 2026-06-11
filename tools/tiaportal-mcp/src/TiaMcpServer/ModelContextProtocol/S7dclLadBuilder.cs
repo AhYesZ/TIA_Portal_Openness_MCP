@@ -9,10 +9,11 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
     /// Offline builder: JSON → .s7dcl + .s7res LAD document pair.
-    /// Generates UTF-8 (no BOM) files suitable for ImportBlocksFromDocuments / ImportFromDocuments.
+    /// Generates UTF-8 with BOM files suitable for TIA Portal version-controller workspace import.
     ///
     /// Based on Siemens spec Entry ID 109994073 and verified round-trip on TIA V21
     /// against FB_CompleteInstructionGallery (67 networks, 0 errors).
+    /// BOM is REQUIRED — TIA-exported reference files all carry EF BB BF.
     /// </summary>
     public static class S7dclLadBuilder
     {
@@ -67,7 +68,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // ── Build .s7dcl ──
             var sb = new StringBuilder();
 
-            // UTF-8 without BOM — matches reference files exported from TIA
+            // UTF-8 with BOM — matches reference files exported from TIA (all have EF BB BF)
             // Block pragma header
             sb.AppendLine("{");
             sb.AppendLine($"    S7_BlockComment := \"{blockCommentMlc}\";");
@@ -174,9 +175,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var s7dclPath = Path.Combine(outputDirectory, $"{blockName}.s7dcl");
             var s7resPath = Path.Combine(outputDirectory, $"{blockName}.s7res");
 
-            // Write WITHOUT BOM — reference files from TIA have no BOM
-            File.WriteAllText(s7dclPath, sb.ToString(), new UTF8Encoding(false));
-            File.WriteAllText(s7resPath, s7resSb.ToString(), new UTF8Encoding(false));
+            // Write WITH BOM — reference files from TIA (FC_FromRef, FB_CompleteInstructionGallery) all carry EF BB BF
+            File.WriteAllText(s7dclPath, sb.ToString(), new UTF8Encoding(true));
+            File.WriteAllText(s7resPath, s7resSb.ToString(), new UTF8Encoding(true));
 
             var result = new JsonObject
             {
@@ -191,7 +192,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["outputFiles"] = new JsonArray(s7dclPath, s7resPath),
                 ["mlcCount"] = mlcMap.Count,
                 ["networkCount"] = netIdx,
-                ["message"] = $"Generated {blockName}.s7dcl + .s7res (UTF-8, no BOM) in {outputDirectory}. Import with ImportBlocksFromDocuments or ImportFromDocuments."
+                ["message"] = $"Generated {blockName}.s7dcl + .s7res (UTF-8 with BOM) in {outputDirectory}. Import with ImportBlocksFromDocuments or ImportFromDocuments."
             };
 
             return result;
@@ -386,7 +387,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     sb.Append($"{instr}( operand := {operand}, bit := {bit} )");
                     return;
                 }
-                sb.Append($"{instr}( {operand} )");
+                sb.Append($"{instr}( {FormatVarRef(operand)} )");
                 return;
             }
 
@@ -399,7 +400,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var effectiveInstr = elem["method"]?.ToString();  // optional: explicit method name
                 var callInstr = effectiveInstr ?? instr;
-                sb.Append($"{inst}.{callInstr}(");
+                sb.Append($"{FormatVarRef(inst)}.{callInstr}(");
                 if (hasParams)
                     WriteParams(sb, paramObj, instr);
                 sb.Append(" )");
@@ -432,7 +433,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var val = kvp.Value?.ToString() ?? "";
                 bool isOutput = IsOutputPin(key, instr);
                 string connector = isOutput ? "=>" : ":=";
-                items.Add($"{key} {connector} {val}");
+                items.Add($"{key} {connector} {FormatVarRef(val)}");
             }
             sb.Append(string.Join(",\r\n                ", items));
         }
@@ -469,6 +470,26 @@ namespace TiaMcpServer.ModelContextProtocol
 
             // Default: assume input (:=)
             return false;
+        }
+
+        // ── Variable reference formatter ──
+        // TIA requires block-local variables in #"Name" format (hash + double-quoted).
+        // Global tags use "Name" format (just quotes, no hash). Constants are left as-is.
+        private static string FormatVarRef(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return value;
+
+            // Already formatted: #"Name" → keep
+            if (value.StartsWith("#\"") && value.EndsWith("\""))
+                return value;
+
+            // Block-local var without quotes: #Name → #"Name"
+            if (value.StartsWith("#"))
+                return "#\"" + value.Substring(1) + "\"";
+
+            // Global tag or constant → keep as-is
+            return value;
         }
 
         // ── Deterministic MLC ID generator ──
