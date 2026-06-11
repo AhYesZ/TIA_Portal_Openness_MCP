@@ -62,6 +62,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             "Add", "Sub", "Mul", "Div", "Mod",
             "Move", "Convert", "Calculate",
+            // Edge detection boxes
+            "P_Trig", "N_Trig",
             // Q-Boxes
             "TP", "TON", "TOF", "TONR",
             "Ctu", "Ctd", "Ctud",

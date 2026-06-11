@@ -1,0 +1,554 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "LAD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "FB调用测试(无有效功能)"
+    VAR_INPUT
+        ioEnable : Bool;
+        ioStop : Bool;
+        ioIntA : Int;
+        ioIntB : Int;
+        ioRealA : Real;
+        ioRealB : Real;
+        ioTimeMs : Time;
+        ioTrigEdge : Bool;
+        ioDIntVal : DInt;
+        ioDWordVal : DWord;
+        ioWordVal : Word;
+    END_VAR
+    VAR_OUTPUT
+        oqActive : Bool;
+        oqFault : Bool;
+        oqTimerDone : Bool;
+        oqCounterDone : Bool;
+        oqCalcInt : Int;
+        oqCalcReal : Real;
+        oqMovedInt : Int;
+        oqPulseOut : Bool;
+        oqGtContactReal : Bool;
+        oqLtContactReal : Bool;
+        oqEqContactReal : Bool;
+        oqBoxGt : Bool;
+        oqBoxEq : Bool;
+        oqModDInt : DInt;
+        oqNegReal : Real;
+        oqMinReal : Real;
+        oqMaxReal : Real;
+        oqLimitInt : Int;
+        oqSelInt : Int;
+        oqMuxInt : Int;
+        oqShrDWord : DWord;
+        oqShlDWord : DWord;
+        oqAndWord : Word;
+        oqOrWord : Word;
+        oqXorWord : Word;
+        oqConvReal : Real;
+        oqConvDInt : DInt;
+        oqChainCalc : Int;
+        oqOr3Branch : Bool;
+        oqMultiOutA : Bool;
+        oqMultiOutB : Bool;
+    END_VAR
+    VAR_IN_OUT
+        ioSharedTimer : TON_TIME;
+        ioSharedTOF : TOF_TIME;
+    END_VAR
+    VAR
+        StatTP : TP_TIME;
+        StatCTU : IEC_COUNTER;
+        StatCTD : IEC_COUNTER;
+        StatCTUD : IEC_COUNTER;
+        StatLatch : _.FB_BasicLatch;
+        StatLatchResult_Active : Bool;
+        StatLatchResult_Fault : Bool;
+        StatLatchResult_Healthy : Bool;
+    END_VAR
+    VAR_TEMP
+        TmpBool : Bool;
+        TmpInt : Int;
+        TmpReal : Real;
+        PulseWork1 : Bool;
+        PulseWork2 : Bool;
+        PulseWorkCtu : Bool;
+        PulseWorkCtd : Bool;
+        PulseWorkCtud : Bool;
+        TmpJumpTrig : Bool;
+    END_VAR
+
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            Coil( #oqActive )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioStop )
+            Not()
+            Coil( #oqFault )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioTrigEdge )
+            P_Trig( #PulseWork1 )
+            Coil( #oqPulseOut )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioTrigEdge )
+            N_Trig( #PulseWork2 )
+            Coil( #oqFault )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            S_Coil( #oqActive )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioStop )
+            R_Coil( #oqActive )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            { S7_Templates := "time_type := Time" }
+            #ioSharedTimer.TON(
+                pt := #ioTimeMs,
+                et =>  
+            )
+            Coil( #oqTimerDone )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            { S7_Templates := "time_type := Time" }
+            #StatTP.TP(
+                pt := T#500ms,
+                et =>  
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            { S7_Templates := "time_type := Time" }
+            #ioSharedTOF.TOF(
+                pt := T#300ms,
+                et =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioTrigEdge )
+            P_Trig( #PulseWorkCtu )
+            { S7_Templates := "value_type := Int" }
+            #StatCTU.CTU(
+                r := #ioStop,
+                pv := 10,
+                cv => #TmpInt
+            )
+            Coil( #oqCounterDone )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioTrigEdge )
+            P_Trig( #PulseWorkCtd )
+            { S7_Templates := "value_type := Int" }
+            #StatCTD.CTD(
+                ld := #ioStop,
+                pv := 5,
+                cv => #TmpInt
+            )
+            Coil( #oqCounterDone )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioTrigEdge )
+            P_Trig( #PulseWorkCtud )
+            { S7_Templates := "value_type := Int" }
+            #StatCTUD.CTUD(
+                cd := #ioStop,
+                r := #ioEnable,
+                ld := FALSE,
+                pv := 20,
+                qd => #oqPulseOut,
+                cv => #TmpInt
+            )
+            Coil( #oqFault )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Add(
+                in1 := #ioIntA,
+                in2 := #ioIntB,
+                out => #oqCalcInt
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Sub(
+                in1 := #oqCalcInt,
+                in2 := 50,
+                out => #TmpInt
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Real"
+            }
+            Mul(
+                in1 := #ioRealA,
+                in2 := #ioRealB,
+                out => #oqCalcReal
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Real"
+            }
+            Div(
+                in1 := #oqCalcReal,
+                in2 := 10.0,
+                out => #TmpReal
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            
+            Move(
+                in := #ioIntA,
+                out1 => #oqMovedInt
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            GE_Contact(
+                in1 := #ioIntA,
+                in2 := 0
+            )
+            Coil( #TmpBool )
+        END_RUNG
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            LE_Contact(
+                in1 := #ioIntA,
+                in2 := 100
+            )
+            Coil( #TmpBool )
+        END_RUNG
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            NE_Contact(
+                in1 := #ioRealA,
+                in2 := 0.0
+            )
+            Coil( #TmpBool )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            wire#w1
+            Coil( #oqActive )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioStop )
+        END_RUNG wire#w1
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            Contact( #ioStop )
+            Coil( #oqFault )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            #StatLatch(
+                Enable := #ioEnable,
+                Disable := #ioStop,
+                FaultInput := #oqFault,
+                Reset := FALSE,
+                Active => #StatLatchResult_Active,
+                Fault => #StatLatchResult_Fault,
+                Healthy => #StatLatchResult_Healthy
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            wire#w1
+            "FC_BasicScaleLimit"(
+                RawValue := #ioRealA,
+                RawMin := 0.0,
+                RawMax := 100.0,
+                EngMin := 0.0,
+                EngMax := 10.0,
+                EngValue => #oqCalcReal,
+                Valid => #TmpBool,
+                Clamped => #TmpBool
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioStop )
+        END_RUNG wire#w1
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkTitle := "MLC_4dF"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( "V90_Drive1_ZSW1".%X0 )
+            Coil( "DB_HMI_Interface".SystemReady )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( "DB_HMI_Interface".SystemFault )
+            Coil( "Sys_FaultLed" )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            GT_Contact(
+                in1 := #ioRealA,
+                in2 := 0.0
+            )
+            Coil( #oqGtContactReal )
+        END_RUNG
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            LT_Contact(
+                in1 := #ioRealB,
+                in2 := 100.0
+            )
+            Coil( #oqLtContactReal )
+        END_RUNG
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            EQ_Contact(
+                in1 := #ioRealA,
+                in2 := #ioRealB
+            )
+            Coil( #oqEqContactReal )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            GT_Contact(
+                in1 := #ioIntA,
+                in2 := #ioIntB
+            )
+            Coil( #oqBoxGt )
+        END_RUNG
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #ioIntA,
+                in2 := 0
+            )
+            Coil( #oqBoxEq )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := DInt"
+            }
+            Mod(
+                in1 := #ioDIntVal,
+                in2 := DINT#3,
+                out => #oqModDInt
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Real"
+            }
+            Neg(
+                in := #ioRealA,
+                out => #oqNegReal
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "value_type := Real"; 
+                S7_GenerateENO := "TRUE"
+            }
+            MIN(
+                in1 := #ioRealA,
+                in2 := #ioRealB,
+                out => #oqMinReal
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            {
+                S7_Templates := "value_type := Real"; 
+                S7_GenerateENO := "TRUE"
+            }
+            MAX(
+                in1 := #ioRealA,
+                in2 := #ioRealB,
+                out => #oqMaxReal
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            {
+                S7_Templates := "value_type := Int"; 
+                S7_GenerateENO := "TRUE"
+            }
+            Limit(
+                min := 0,
+                in := #ioIntA,
+                max := 100,
+                out => #oqLimitInt
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "value_type := Int" }
+            SEL(
+                g := #ioEnable,
+                in0 := #ioIntA,
+                in1 := #ioIntB,
+                out => #oqSelInt
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            Mux(
+                k := #ioIntA,
+                in0 := 10,
+                in1 := 20,
+                in2 := 30,
+                in3 := 40,
+                else := 0,
+                out => #oqMuxInt
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := DWord"
+            }
+            Shr(
+                in := #ioDWordVal,
+                n := 4,
+                out => #oqShrDWord
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := DWord"
+            }
+            Shl(
+                in := #ioDWordVal,
+                n := 4,
+                out => #oqShlDWord
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "SCL" }
+    NETWORK
+          #oqAndWord := #ioWordVal AND W#16#00FF;
+                  #oqOrWord := #ioWordVal OR W#16#FF00;
+                  #oqXorWord := #ioWordVal XOR W#16#FFFF;
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "[SrcType := DInt, DestType := Real]"
+            }
+            Convert(
+                in := #ioDIntVal,
+                out => #oqConvReal
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            {
+                S7_Templates := "[SrcType := Real, DestType := DInt]"
+            }
+            Convert(
+                in := #ioRealA,
+                out => #oqConvDInt
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Add(
+                in1 := #ioIntA,
+                in2 := #ioIntB,
+                out => #TmpInt
+            )
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Mul(
+                in1 := #TmpInt,
+                in2 := 2,
+                out => #oqChainCalc
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            wire#w1
+            Coil( #oqOr3Branch )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #ioTrigEdge )
+            P_Trig( #TmpJumpTrig )
+        END_RUNG wire#w1
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            GT_Contact(
+                in1 := #ioRealA,
+                in2 := 50.0
+            )
+            Coil( #oqOr3Branch )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #ioEnable )
+            Coil( #oqMultiOutA )
+            Coil( #oqMultiOutB )
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

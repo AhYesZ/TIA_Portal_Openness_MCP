@@ -111,19 +111,19 @@ END_ORGANIZATION_BLOCK
 |----------|--------|------|------|
 | 四则运算 Add/Sub/Mul/Div/Mod | `SrcType` | `{ S7_Templates := "SrcType := Int" }` | TIA 接受 |
 | 比较触点 GT/LT/EQ/NE/GE/LE_Contact | `SrcType` | `{ S7_Templates := "SrcType := Int" }` | TIA 接受 |
-| IEC 定时器 TON/TOF/TP/TONR | `timeType` | `{ S7_Templates := "timeType := Time" }` | PDF Listing 29 |
-| IEC 计数器 Ctu/Ctd/Ctud | `countType` | `{ S7_Templates := "countType := DInt" }` | PDF Listing 30 |
-| Convert | Array | `{ S7_Templates := "[ inType := Int, outType := Real ]" }` | 两个模板 |
+| IEC 定时器 TON/TOF/TP/TONR | `time_type` | `{ S7_Templates := "time_type := Time" }` | ⚠️ 下划线，非驼峰！TIA V21 实测 |
+| IEC 计数器 Ctu/Ctd/Ctud | `value_type` | `{ S7_Templates := "value_type := Int" }` | ⚠️ 非 countType！TIA V21 实测 |
+| Convert | Array | `{ S7_Templates := "[SrcType := Int, DestType := Real]" }` | ⚠️ SrcType/DestType 非 inType/outType！ |
 | Calculate | `SrcType` | `{ S7_Templates := "SrcType := Real" }` | |
-| 选择器 MIN/MAX/LIMIT/SEL/MUX | `value_type` | `{ S7_Templates := "value_type := Int" }` | **⚠️ 不是 SrcType！** |
+| 选择器 MIN/MAX/LIMIT/SEL | `value_type` | `{ S7_Templates := "value_type := Int" }` | **⚠️ 不是 SrcType！** |
+| MUX | `SrcType` | `{ S7_Templates := "SrcType := Int" }` | ⚠️ MUX 用 SrcType（非 value_type！TIA V21 实测） |
 | 字逻辑 AND/OR/XOR/INV | **不需要** | 不加模板 pragma | 类型自动推导 |
-| 移位 SHR/SHL/ROR/ROL | **不需要** | 不加模板 pragma | 同上 |
-| 传送 Move | **不需要** | 不加模板 pragma | 自动 |
+| 移位 SHR/SHL/ROR/ROL | `SrcType` | `{ S7_Templates := "SrcType := DWord" }` | ⚠️ 非模板豁免！TIA V21 实测 |
 | CMP >= / <= / <> | **不需要** | 不加模板 pragma | 加模板反而报错！ |
 | JMP/LABEL/RET | — | **S7DCL 导入不支持** | TIA 直接拒绝 |
-| 取反 NEG | **不需要** | 不加模板 pragma | 引脚名是 `in` 不是 `in1` |
+| 取反 NEG | `SrcType` | `{ S7_Templates := "SrcType := Real" }` | ⚠️ 非模板豁免；引脚 `in` 非 `in1` |
 
-> **根源**: PDF Listing 17 用 `SrcType`，Listing 22 用 `valueType`——官方文档自身不一致。上表来自 TIA V21 实际导入验证（2026-06-10）。
+> **根源**: PDF Listing 17 用 `SrcType`，Listing 22 用 `valueType`——官方文档自身不一致。MUX 实测用 SrcType（非 value_type），其余选择器用 value_type。上表来自 TIA V21 实际导入验证（2026-06-10），已用参考程序 `程序语法格式参考(博图编译通过0错误).s7dcl` 二次确认。
 
 ---
 
@@ -139,6 +139,8 @@ END_ORGANIZATION_BLOCK
 | `I_Contact` | 1 | `out := in AND NOT a` | `I_Contact( a )` |
 | `P_Contact` | 2 | 上升沿检测 | `P_Contact( operand:=sig, bit:=store )` **bit 必需** |
 | `N_Contact` | 2 | 下降沿检测 | `N_Contact( operand:=sig, bit:=store )` **bit 必需** |
+| `P_Trig` | 1 | 上升沿检测（Box型） | `P_Trig( #edge_mem )` — 沿存储 Bool，单操作数 |
+| `N_Trig` | 1 | 下降沿检测（Box型） | `N_Trig( #edge_mem )` — 沿存储 Bool，单操作数 |
 | `GT_Contact` | 2 | `in1 > in2` | `{SrcType:=Int} GT_Contact(in1:=#A, in2:=100)` |
 | `LT_Contact` | 2 | `in1 < in2` | `{SrcType:=Int} LT_Contact(in1:=#A, in2:=0)` |
 | `EQ_Contact` | 2 | `in1 == in2` | `{SrcType:=Int} EQ_Contact(in1:=#X, in2:=#Y)` |
@@ -220,15 +222,27 @@ Mod( in1 := #A, in2 := #B, out => #REM )
 #### 传送 & 转换
 ```
 Move( in := 42, out1 => #DST )
-{ S7_Templates := "[ inType := Int, outType := Real ]" }
+{ S7_Templates := "[SrcType := Int, DestType := Real]" }
 Convert( in := #X, out => #Y )
 ```
 
 #### EN/ENO 控制
 ```
-{ S7_GenerateENO := TRUE }    ← 开启 ENO 计算
+{ S7_GenerateENO := "TRUE" }    ← 开启 ENO 计算（选择器常用）
 ```
 默认关闭时 ENO:=EN，不导出 pragma。
+
+**选择器专用模板（MIN/MAX/LIMIT）：**
+```
+{
+    S7_Templates := "value_type := Real";
+    S7_GenerateENO := "TRUE"
+}
+MIN( in1 := #ioRealA, in2 := #ioRealB, out => #oqMinReal )
+MAX( in1 := #ioRealA, in2 := #ioRealB, out => #oqMaxReal )
+LIMIT( min := 0, in := #ioIntA, max := 100, out => #oqLimitInt )
+```
+**引脚命名**: LIMIT 用 `min`/`max`（非 `mn`/`mx`）。TIA V21 实测确认。
 
 #### FC 调用 (官方案例 Listing 25)
 ```
@@ -294,7 +308,7 @@ END_RUNG wire#w1
 
 #### IEC 定时器 (官方案例 Listing 29)
 ```
-{ S7_Templates := "timeType := Time" }
+{ S7_Templates := "time_type := Time" }
 #inst.TP(  pt := T#10s,  et => #elapsed )
 #inst.TON( pt := T#2s,   et => #elapsed )
 #inst.TOF( pt := T#1s,   et => #elapsed )
@@ -304,7 +318,7 @@ END_RUNG wire#w1
 
 #### IEC 计数器 (官方案例 Listing 30)
 ```
-{ S7_Templates := "countType := DInt" }
+{ S7_Templates := "value_type := Int" }
 
 #inst.Ctu(  r := #Reset,  pv := #Preset,  cv => #Value )
 #inst.Ctd(  ld := #Load,  pv := #Preset,  cv => #Value )
@@ -451,13 +465,14 @@ MultiLingualTexts:
 | 8 | **忘写 `S7_Language`** | 网络无效 | 每个 NETWORK 前加 pragma |
 | 9 | **猜测未知指令语法** | 导入报错 | `ExportBlocksAsDocuments` 导出真实语法 |
 | 10 | **wire# 放错位置** | EN 断连 | wire# 只用于并联分支 |
-| 11 | **MIN/MAX/LIMIT/SEL/MUX 用了 SrcType** | `Invalid Template Types` | 改为 `value_type`（见 §二点五） |
-| 12 | **字逻辑/移位/CMP 前加了模板 pragma** | `no viable alternative` | 去掉 `{ S7_Templates }` 行 |
-| 13 | **P_Contact/N_Contact 没写 bit 引脚** | `Pin 'bit' connection is missing` | 写 `P_Contact( operand:=sig, bit:=#mem )` |
-| 14 | **MUX 没写 else 输出** | `Pin 'else' missing` | 加 `else := default_value` |
-| 15 | **NEG 用了 in1 引脚** | 编译报错 | 引脚名是 `in` 不是 `in1` |
-| 16 | **VAR_TEMP 用了 AT 覆盖** | 语法错误 | LAD 不支持 `AT` 语法，用独立变量 |
-| 17 | **JMP/LABEL/RET 导入** | `mismatched input 'LABEL'` | S7DCL 导入不支持跳转/返回指令 |
+| 11 | **MIN/MAX/LIMIT/SEL 用了 SrcType** | `Invalid Template Types` | 改为 `value_type`（§二点五） |
+| 12 | **MUX 用了 value_type** | `Invalid Template Types` | MUX 用 `SrcType`（§二点五）— 与其余选择器不同！ |
+| 13 | **移位 SHR/SHL/ROR/ROL 没写模板** | 编译/导入失败 | 必加 `{ S7_Templates := "SrcType := DWord" }` |
+| 14 | **P_Contact/N_Contact 没写 bit 引脚** | `Pin 'bit' connection is missing` | 写 `P_Contact( operand:=sig, bit:=#mem )` |
+| 15 | **MUX 没写 else 输出** | `Pin 'else' missing` | 加 `else := default_value` |
+| 16 | **NEG 用了 in1 引脚** | 编译报错 | 引脚名是 `in` 不是 `in1` |
+| 17 | **VAR_TEMP 用了 AT 覆盖** | 语法错误 | LAD 不支持 `AT` 语法，用独立变量 |
+| 18 | **JMP/LABEL/RET 导入** | `mismatched input 'LABEL'` | S7DCL 导入不支持跳转/返回指令 |
 
 ---
 
@@ -517,9 +532,9 @@ MultiLingualTexts:
 |------|------|
 | `skill/lad-cookbook/MCPVerify_FC_LAD.s7dcl` + `.s7res` | 串联/并联/SR/比较/Move/Add |
 | `skill/lad-cookbook/MCPVerify_FB_LAD_v3.s7dcl` + `.s7res` | 定时器/P_Trig/Not/LT |
+| `docs/DS文件收集/程序语法格式参考(博图编译通过0错误).s7dcl` | **权威参考程序** — FB全语法覆盖，TIA V21 编译 0 错误 |
 | `docs/DS文件收集/SIMATIC_Source_Documents_LADDER_Format_Description.pdf` | 官方规范 Entry ID 109994073 |
 | `docs/DS文件收集/SimaticSDEnabler_V1.1.0/` | Siemens 官方 SimaticSDEnabler CLI 工具 (SDEnablerCli v1.1.0) |
-| `docs/DS文件收集/S7DCL_LAD_Reference.md` | 本文件的 docs 副本（中文排版） |
 
 ### SimaticSDEnabler CLI 工具
 Siemens 官方提供的命令行工具，位于 `docs/DS文件收集/SimaticSDEnabler_V1.1.0/`，核心可执行文件：
