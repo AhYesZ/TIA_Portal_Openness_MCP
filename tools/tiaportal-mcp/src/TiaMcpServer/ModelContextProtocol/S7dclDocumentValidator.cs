@@ -128,6 +128,29 @@ namespace TiaMcpServer.ModelContextProtocol
             @"\b(MOVE|ADD_?AUTO|SUB_?AUTO|MUL_?AUTO|DIV_?AUTO|NEG_?AUTO|CONVERT|CALCULATE|SELECT|LIMIT_|MUX_)\s*\(",
             RegexOptions.Compiled);
 
+        // ── Trap #38: P_Trig/N_Trig at RUNG start without preceding logic ──
+        // TIA requires "前导逻辑运算" (preceding logic) before edge detection boxes
+        private static readonly Regex EdgeDetectAtRungStartRegex = new(
+            @"RUNG\s+wire#powerrail\s*\n\s*(P_Trig|N_Trig)\s*\(",
+            RegexOptions.Compiled);
+
+        // ── Trap #39: Bare instance ref without #" prefix (Q-boxes) ──
+        // Correct: #"tonInst".TON( ... Wrong: tonInst.TON(
+        private static readonly Regex BareInstanceRefRegex = new(
+            @"(?<!\#"")(?<!\w)([a-zA-Z_]\w*)\.(?=(TON|TOF|TP|TONR|CTU|CTD|CTUD|S_RS|S_SR|S_Cu|S_Cd|S_Cud)\s*\()",
+            RegexOptions.Compiled);
+
+        // ── Trap #40: VAR_TEMP section must come after VAR (static) for FB ──
+        private static readonly Regex VarTempBeforeStaticRegex = new(
+            @"VAR_TEMP[\s\S]*?END_VAR[\s\S]*?VAR\b",
+            RegexOptions.Compiled);
+
+        // ── Trap #41: Missing block-end statement ──
+        // Checks that FUNCTION ends with END_FUNCTION, FUNCTION_BLOCK with END_FUNCTION_BLOCK, etc.
+        private static readonly Regex BlockEndRegex = new(
+            @"END_(FUNCTION|FUNCTION_BLOCK|ORGANIZATION_BLOCK|DATA_BLOCK)",
+            RegexOptions.Compiled);
+
         // ── SCL-in-LAD trap: SCL patterns inside LAD networks ──
         private static readonly Regex SclAssignmentInLadRegex = new(
             @"#\w+\s*:=\s*", RegexOptions.Compiled);  // #Var := ... (SCL assignment, not valid in LAD RUNG)
@@ -430,6 +453,15 @@ namespace TiaMcpServer.ModelContextProtocol
                         AddCheck("trap", "fail", $"{baseName}:{netLabel}: Negated() does not exist in S7DCL — use I_Contact or Contact→Not. (陷阱#19)");
                     if (Regex.IsMatch(netContent, @"RUNG\s+wire#powerrail\s*\n\s*Not\s*\("))
                         AddCheck("trap", "fail", $"{baseName}:{netLabel}: Not() at RUNG start — LAD requires preceding Contact. (陷阱#20)");
+
+                    // ── Trap #38: P_Trig/N_Trig at RUNG start without preceding logic ──
+                    if (EdgeDetectAtRungStartRegex.IsMatch(netContent))
+                        AddCheck("trap", "warn", $"{baseName}:{netLabel}: P_Trig/N_Trig at RUNG start without preceding Contact — TIA requires preceding logic (\"需要前导逻辑运算\"). Add Contact() before edge detection. (陷阱#38)");
+
+                    // ── Trap #39: Bare instance ref without #" prefix for Q-boxes ──
+                    var bareInstMatch = BareInstanceRefRegex.Match(netContent);
+                    if (bareInstMatch.Success)
+                        AddCheck("trap", "warn", $"{baseName}:{netLabel}: Instance ref '{bareInstMatch.Groups[1].Value}' lacks #\" prefix — Q-box instances must use #\"Name\" format. (陷阱#39)");
                 }
             }
 

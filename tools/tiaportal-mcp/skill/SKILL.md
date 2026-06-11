@@ -632,10 +632,16 @@ For architecture reference and developer workflows, load skill `tia-mcp-dev`.
 | CTU/CTD/CTUD LAD inline cu/r/cd/ld uppercase | Uppercase pins in LAD | LAD用小写(`r`/`pv`/`cv`); SCL用大写(`CU`/`R`/`PV`/`CV`) — see §4h |
 | Counter SCL split assignment | Parameter "already used" error | All pins in one statement: `inst.CTU(CU:=...,PV:=...,Q=>...)` |
 | Counter Static uses IEC_COUNTER | Wrong type | Use `CTU_INT`/`CTD_INT`/`CTUD_INT` |
+| P_Trig/N_Trig at RUNG start | "需要前导逻辑运算" 编译报警 | Add `Contact(#Trig)` before edge detection box |
+| Main rung ends with `END_RUNG wire#w1` | wire# only for branches; main rung wire broken | Main rung: `END_RUNG`; branch rungs: `END_RUNG wire#w1` |
+| Block variables not in VAR section | Undefined variable errors on import | All `#"Name"` variables in network MUST be declared in VAR_INPUT/VAR_OUTPUT/VAR/IN_OUT |
+| Q-box instance without #" prefix | `tonInst.TON(...)` — bare ref, not block-local | `#"tonInst".TON(...)` — instance var must use #"Name" |
+| .s7res always required assumption | TIA exports without .s7res when no MLC | Only generate .s7res when block/network have comments or titles |
+| Multi-param first param unindented | `Add(\nin1 := ...` — first param at col 0 | First param indent 16 spaces, matches subsequent params |
 
 ## 12. Claude Code LAD Internal Errors (AI Confusion Patterns)
 
-> Based on 10 Claude Code TIA V21 import iteration sessions (2026-06-11).
+> Based on 15+ Claude Code TIA V21 import iteration sessions (2026-06-11).
 > These are patterns the AI will tend to hallucinate — intercept them before code generation.
 
 | # | AI Tendency | Why It's Wrong | Correct |
@@ -650,3 +656,8 @@ For architecture reference and developer workflows, load skill `tia-mcp-dev`.
 | 8 | Invents comparison boxes as contacts | Puts `GT_Contact` where a box should be, then `GT()` without `out=>` | Contact form: `GT_Contact + Coil`; Box form: `GT(..., out=>)` |
 | 9 | Forgets P_Trig before counter | Assumes CTU counts on EN level | LAD CTU needs `P_Trig` for edge-triggered counting |
 | 10 | Leaves stale MLC in .s7res after editing .s7dcl | Incremental edit only touches .s7dcl | MUST sync .s7res — remove unused MLC, add new ones |
+| 11 | Puts P_Trig/N_Trig at RUNG start alone | Edge detection needs driving logic | `Contact(#Trig) → P_Trig(#edgeMem) → CTU(…)` |
+| 12 | Uses `END_RUNG wire#w1` on main rung | wire# is branch connector only | Main rung: `END_RUNG`; Branch rungs: `END_RUNG wire#w1` |
+| 13 | Writes Q-box instance name bare (`tonInst`) | Missing #"Name" block-local format | `#"tonInst".TON(…)` — MUST use #"Name" |
+| 14 | Generates blocks without VAR declarations | Variables in networks but no input/output/static | Always declare ALL variables used in networks in VAR sections |
+| 15 | Always generates .s7res file | TIA only needs .s7res when MLC exists | Omit .s7res when block+networks have no comment/title |
