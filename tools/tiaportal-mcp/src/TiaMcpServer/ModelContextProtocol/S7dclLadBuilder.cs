@@ -84,10 +84,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     sb.AppendLine($"FUNCTION \"{blockName}\" : Void");
                     WriteVarSection(sb, "VAR_INPUT", inputs);
                     WriteVarSection(sb, "VAR_OUTPUT", outputs);
-                    // FC with SCL networks may need VAR_TEMP; always emit it
-                    if (!HasSclNetworks(networksJson))
-                        WriteVarSection(sb, "VAR_TEMP", new List<(string, string)>());
-                    else
+                    // Only emit VAR_TEMP for FC if it has SCL networks that need temp vars
+                    if (HasSclNetworks(networksJson))
                         WriteVarSection(sb, "VAR_TEMP", new List<(string, string)>());
                     break;
                 case "fb":
@@ -122,12 +120,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 mlcMap[netTitleMlc] = netTitle;
                 mlcMap[netCommentMlc] = netComment;
 
-                // FIXED: S7_NetworkTitle = title, S7_NetworkComment = comment (were swapped!)
-                sb.AppendLine();
+                // Reference format: only first network has blank line after END_VAR;
+                // consecutive networks have NO blank line between END_NETWORK and next pragma.
+                if (netIdx == 1)
+                    sb.AppendLine();   // blank line after VAR section before first network
                 sb.AppendLine("    {");
                 sb.AppendLine($"        S7_Language := \"{netLang}\";");
-                sb.AppendLine($"        S7_NetworkTitle := \"{netTitleMlc}\";");
-                sb.AppendLine($"        S7_NetworkComment := \"{netCommentMlc}\"");
+                // Reference order: S7_NetworkComment first, then S7_NetworkTitle (last line no semicolon)
+                sb.AppendLine($"        S7_NetworkComment := \"{netCommentMlc}\";");
+                sb.AppendLine($"        S7_NetworkTitle := \"{netTitleMlc}\"");
                 sb.AppendLine("    }");
                 sb.AppendLine("    NETWORK");
 
@@ -240,10 +241,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 sb.AppendLine($"    END_VAR");
                 return;
             }
-            sb.Append("       ");
+            // One variable per line — TIA SD parser requires this format
             foreach (var (name, datatype) in members)
-                sb.Append($" \"{name}\" : {datatype};");
-            sb.AppendLine();
+                sb.AppendLine($"        \"{name}\" : {datatype};");
             sb.AppendLine($"    END_VAR");
         }
 
