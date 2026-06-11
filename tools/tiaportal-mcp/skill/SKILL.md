@@ -18,6 +18,53 @@ triggers:
   - Resolve HMI tag binding and data type compatibility issues
 ---
 
+# ⚠️ LAD 编程 — 强制规则（Claude Code 必须先读这里）
+
+**当用户说"写 LAD 程序" / "创建梯形图" / "添加逻辑" 时，严格按以下步骤：**
+
+## 步骤 0 — 准备工作区
+1. 确认或创建 .s7dcl 工作目录：
+   ```
+   <TIA项目路径>\PLC_1\程序块\     ← 所有 .s7dcl/.s7res 输出到这里
+   ```
+2. 建议用 Git 管理：`cd <项目路径> && git init && git add -A`
+3. 检查是否已有 .s7dcl 文件——若存在，在此基础上修改而非重写
+
+## 步骤 1 — BuildS7dclLadBlock 生成（禁止手写）
+```
+BuildS7dclLadBlock(json, outputDirectory, dryRun=true)   ← 先验证
+BuildS7dclLadBlock(json, outputDirectory, dryRun=false)  ← 生成文件
+```
+
+## 步骤 2 — 离线校验
+```
+ValidateS7dclDocuments(outputDirectory)    ← 31种陷阱检测
+```
+必须全部通过才能继续。
+
+## 步骤 3 — 导入 + 编译
+```
+ImportBlocksFromDocuments(softwarePath="PLC_1", groupPath="", importPath=outputDirectory)
+CompileSoftware("PLC_1")
+```
+
+## 绝对禁止
+- ❌ 手写 .s7dcl 文本（用 BuildS7dclLadBlock JSON 代替）
+- ❌ 用 ComposePlcLadFcBlockXml（不支持触点/线圈/定时器/计数器）
+- ❌ 跳过 dryRun 直接生成
+- ❌ 跳过 ValidateS7dclDocuments 直接导入
+
+## Claude Code 最容易犯的错（生成前对照检查）
+| 错误 | 正确 |
+|------|------|
+| `timeType := Time` | `time_type := Time` |
+| `countType := DInt` | `value_type := Int` |
+| `CMP >=(in1:=, in2:=)` | `GT(in1:=, in2:=, out=>)` |
+| `Negated(#Var)` | 不存在！用 I_Contact 或 Contact→Not |
+| LAD 计数器 `cu:=` 显式赋值 | P_Trig 驱动，小写 r/pv/cv |
+| 变量 `#SET` 无引号 | `#"SET"` |
+| 改 .s7dcl 不管 .s7res | 同步 .s7res |
+
 # TIA Portal Project Automation (V20/V21)
 
 End-to-end workflow for creating TIA Portal projects programmatically through the MCP bridge. Covers V20 and V21, Unified and Classic HMI.
