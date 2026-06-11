@@ -111,6 +111,7 @@ END_ORGANIZATION_BLOCK
 |----------|--------|------|------|
 | 四则运算 Add/Sub/Mul/Div/Mod | `SrcType` | `{ S7_Templates := "SrcType := Int" }` | TIA 接受 |
 | 比较触点 GT/LT/EQ/NE/GE/LE_Contact | `SrcType` | `{ S7_Templates := "SrcType := Int" }` | TIA 接受 |
+| 比较盒 GT/LT/EQ/NE/GE/LE (box型) | `SrcType` | `{ S7_Templates := "SrcType := Int" }` | ⚠️ out=> 输出；非 CMP！ |
 | IEC 定时器 TON/TOF/TP/TONR | `time_type` | `{ S7_Templates := "time_type := Time" }` | ⚠️ 下划线，非驼峰！TIA V21 实测 |
 | IEC 计数器 Ctu/Ctd/Ctud | `value_type` | `{ S7_Templates := "value_type := Int" }` | ⚠️ 非 countType！TIA V21 实测 |
 | Convert | Array | `{ S7_Templates := "[SrcType := Int, DestType := Real]" }` | ⚠️ SrcType/DestType 非 inType/outType！ |
@@ -122,6 +123,7 @@ END_ORGANIZATION_BLOCK
 | CMP >= / <= / <> | **不需要** | 不加模板 pragma | 加模板反而报错！ |
 | JMP/LABEL/RET | — | **S7DCL 导入不支持** | TIA 直接拒绝 |
 | 取反 NEG | `SrcType` | `{ S7_Templates := "SrcType := Real" }` | ⚠️ 非模板豁免；引脚 `in` 非 `in1` |
+| IEC 计数器 (SCL) | N/A | `#inst.CTU(CU:=#, R:=#, PV:=#, Q=>#, CV=>#)` | LAD 不支持计数器输入引脚 inline 赋值 |
 
 > **根源**: PDF Listing 17 用 `SrcType`，Listing 22 用 `valueType`——官方文档自身不一致。MUX 实测用 SrcType（非 value_type），其余选择器用 value_type。上表来自 TIA V21 实际导入验证（2026-06-10），已用参考程序 `程序语法格式参考(博图编译通过0错误).s7dcl` 二次确认。
 
@@ -147,10 +149,10 @@ END_ORGANIZATION_BLOCK
 | `NE_Contact` | 2 | `in1 <> in2` | `{SrcType:=Int} NE_Contact(in1:=#X, in2:=0)` |
 | `GE_Contact` | 2 | `in1 >= in2` | `{SrcType:=Int} GE_Contact(in1:=#V, in2:=#Limit)` |
 | `LE_Contact` | 2 | `in1 <= in2` | `{SrcType:=Int} LE_Contact(in1:=#V, in2:=#Max)` |
-| `CMP >=` | 2 | `in1 >= in2` (box型) | `CMP >=( in1:=#A, in2:=#B )` — **不需要模板** |
-| `CMP <=` | 2 | `in1 <= in2` (box型) | `CMP <=( in1:=#A, in2:=#B )` — **不需要模板** |
-| `CMP <>` | 2 | `in1 <> in2` (box型) | `CMP <>( in1:=#A, in2:=#B )` — **不需要模板** |
-| `CMP ==` | 2 | `in1 == in2` (box型) | `CMP ==( in1:=#A, in2:=#B )` — **不需要模板** |
+| `CMP >=` | 2 | `in1 >= in2` (box型) | ⚠️ **不存在!** 改用 `GT(in1:=, in2:=, out=>)` 见 §3.4 |
+| `CMP <=` | 2 | `in1 <= in2` (box型) | ⚠️ **不存在!** 改用 `LT(in1:=, in2:=, out=>)` 见 §3.4 |
+| `CMP <>` | 2 | `in1 <> in2` (box型) | ⚠️ **不存在!** 改用 `NE(in1:=, in2:=, out=>)` 见 §3.4 |
+| `CMP ==` | 2 | `in1 == in2` (box型) | ⚠️ **不存在!** 改用 `EQ(in1:=, in2:=, out=>)` 见 §3.4 |
 | `IsValidContact` | 1 | 检查浮点有效性 | `IsValidContact( x )` |
 | `IsNotValidContact` | 1 | 检查浮点无效 | `IsNotValidContact( x )` |
 | `IsArrayContact` | 1 | 检查 Variant 是否含数组 | `IsArrayContact( x )` |
@@ -208,6 +210,20 @@ Not()           out := NOT in
 ### 3.4 ENO-Boxes (数学/转换/调用)
 
 #### 数学运算
+
+**比较盒 (Comparison Boxes) — ⚠️ 非 CMP，直接用指令名！**
+```                                    
+{ S7_Templates := \"SrcType := Int\" }
+GT( in1 := #V1, in2 := #V2, out => #OUT_GTb )     ← 大于，输出到 out
+LT( in1 := #V1, in2 := #V2, out => #OUT_LTb )     ← 小于
+EQ( in1 := #V1, in2 := #V2, out => #OUT_EQb )     ← 等于
+NE( in1 := #V1, in2 := #V2, out => #OUT_NEb )     ← 不等于
+GE( in1 := #V1, in2 := #V2, out => #OUT_GEb )     ← 大于等于
+LE( in1 := #V1, in2 := #V2, out => #OUT_LEb )     ← 小于等于
+```
+**注意**: S7DCL 不存在 `CMP >=`/`CMP <=` 等 box 语法！直接用 `GT`/`LT`/`EQ`/`NE`/`GE`/`LE` 作为 box，使用 `out =>` 输出比较结果，需要 `SrcType` 模板。
+
+与比较触点的区别: 触点型用 `GT_Contact(in1:=,in2:=)` + `Coil(#out)`；盒型用 `GT(in1:=,in2:=,out=>#out)`。
 ```
 { S7_Templates := "SrcType := Int" }     ← 必选(除非 Auto)
 Add( in1 := #A, in2 := #B, out => #SUM )
@@ -348,9 +364,64 @@ S_Cud(
 ```
 Simatic 计数器用 BCD 编码预设值（`C#100`），输出 `cv` 为整数，`cv_bcd` 为 BCD 格式。`q` 输出 = `cv > 0`。
 
-### 3.6 跳转 & 标签 — ⚠️ S7DCL 导入不支持！
+### 3.7 计数器 SCL 语法（混合 LAD/SCL 块）— ⚠️ LAD 不支持计数器输入引脚！
 
-> **TIA V21 验证 (2026-06-10)**: JMP/LABEL/RET 指令在 S7DCL 导入时被 TIA Portal 直接拒绝，报错 `mismatched input 'LABEL'` 和 `no viable alternative`。如需跳转逻辑，请在 TIA UI 中手动添加。
+S7DCL LAD 格式的 CTU/CTD/CTUD **不支持** `cu :=` / `r :=` / `cd :=` / `ld :=` 等输入引脚的 inline 赋值，也不支持通过 wire# 分支连接到这些引脚。必须在 SCL 网络中使用 IEC 方法调用语法：
+
+```scl
+{ S7_Language := "SCL" }
+NETWORK
+    #"ctuInst".CTU(CU := #"CountUp",
+                   R := #"Reset",
+                   PV := #"PresetValue",
+                   Q => #"CTU_Q",
+                   CV => #"CTU_CV");
+END_NETWORK
+```
+
+```scl
+{ S7_Language := "SCL" }
+NETWORK
+    #"ctdInst".CTD(CD := #"CountDown",
+                   LD := #"Load",
+                   PV := #"PresetValue",
+                   Q => #"CTD_Q",
+                   CV => #"CTD_CV");
+END_NETWORK
+```
+
+```scl
+{ S7_Language := "SCL" }
+NETWORK
+    #"ctudInst".CTUD(CU := #"CountUp",
+                     CD := #"CountDown",
+                     R := #"Reset",
+                     LD := #"Load",
+                     PV := #"PresetValue",
+                     QU => #"CTUD_QU",
+                     QD => #"CTUD_QD",
+                     CV => #"CTUD_CV");
+END_NETWORK
+```
+
+**Static 类型声明**: 分别使用 `CTU_INT`、`CTD_INT`、`CTUD_INT`（非 `IEC_COUNTER`）:
+
+```
+VAR
+    "ctuInst" : CTU_INT;
+    "ctdInst" : CTD_INT;
+    "ctudInst" : CTUD_INT;
+END_VAR
+```
+
+**关键规则**:
+- 必须用 `inst.CTU(...)` 方法调用模式（非直接实例调用 `inst(CU:=...)`）
+- 所有输入/输出引脚在一个语句内完成（**禁止**分步赋值 `inst.CU := ...; inst(); inst.Q`）
+- 输出引脚用 `=>`（非 `:=`）
+
+### 3.8 跳转 & 标签 — ⚠️ S7DCL 导入不支持！
+
+> **TIA V21 验证 (2026-06-10)**: JMP/LABEL/RET
 
 以下语法仅存在于 SD 导出文件中，不可用于导入：
 
@@ -473,6 +544,15 @@ MultiLingualTexts:
 | 16 | **NEG 用了 in1 引脚** | 编译报错 | 引脚名是 `in` 不是 `in1` |
 | 17 | **VAR_TEMP 用了 AT 覆盖** | 语法错误 | LAD 不支持 `AT` 语法，用独立变量 |
 | 18 | **JMP/LABEL/RET 导入** | `mismatched input 'LABEL'` | S7DCL 导入不支持跳转/返回指令 |
+| 19 | **Contact(Negated(#Var))** | 语法错误 | S7DCL 无 Negated() 包裹函数！用 Not() 或 I_Contact |
+| 20 | **Not() 放 RUNG 起始** | `不可将 NOT 运算连接到程序段` | 必须前有触点：Contact→Not→Coil |
+| 21 | **wire# 在 Contact 和 Box 之间** | `Pin 'en' missing` / `pre missing` | Box 必须直连前一个元素，无 wire# |
+| 22 | **两个 Box 同一 RUNG 串联** | ENO→EN 断开 | 拆成两个独立网络 |
+| 23 | **CTU/CTD/CTUD LAD 中 inline 赋值 cu/r** | 编译错误 | 改用 SCL 方法调用 `inst.CTU(CU:=...)` |
+| 24 | **Counter SCL 分步赋值** | 参数\"已使用\" | 全部引脚一个语句完成：`inst.CTU(CU:=...,R:=...,PV:=...,Q=>...,CV=>...)` |
+| 25 | **计数器 Static 类型用 IEC_COUNTER** | 类型错误 | 分别用 `CTU_INT`/`CTD_INT`/`CTUD_INT` |
+| 26 | **变量引用不用双引号** | 变量未定义 | `#"VarName"` 声明和引用都必须有双引号 |
+| 27 | **用了不存在的 CMP >= 盒语法** | 语法错误 | 比较盒用 `GT(in1:=, in2:=, out=>)` 非 `CMP >=` |
 
 ---
 

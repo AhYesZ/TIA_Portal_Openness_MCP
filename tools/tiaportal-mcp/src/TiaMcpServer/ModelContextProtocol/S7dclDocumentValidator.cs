@@ -62,6 +62,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             "Add", "Sub", "Mul", "Div", "Mod",
             "Move", "Convert", "Calculate",
+            // Comparison boxes (NOT CMP >=!)
+            "GT", "LT", "EQ", "NE", "GE", "LE",
             // Edge detection boxes
             "P_Trig", "N_Trig",
             // Q-Boxes
@@ -69,6 +71,11 @@ namespace TiaMcpServer.ModelContextProtocol
             "Ctu", "Ctd", "Ctud",
             "S_Cu", "S_Cd", "S_Cud",
             "S_RS", "S_SR",
+            // Selectors
+            "MIN", "MAX", "LIMIT", "SEL", "MUX",
+            // Shift/Rotate/Logic
+            "SHR", "SHL", "ROR", "ROL",
+            "AND", "OR", "XOR", "INV", "NEG",
             // Jumps
             "JumpList", "Switch",
             // Special
