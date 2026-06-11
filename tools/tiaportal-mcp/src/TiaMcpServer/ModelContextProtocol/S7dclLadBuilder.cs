@@ -456,7 +456,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var callInstr = effectiveInstr ?? instr;
                 // Instance names are block-local → must use #"Name" format
                 var instRef = inst.StartsWith("#") ? FormatVarRef(inst) : FormatVarRef("#" + inst);
-                sb.Append($"\r\n            {instRef}.{callInstr}(\r\n");
+                sb.Append($"{instRef}.{callInstr}(\r\n");
                 if (hasParams)
                     WriteParams(sb, paramObj, instr);
                 sb.Append("\r\n            )");
@@ -493,6 +493,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 string connector = isOutput ? "=>" : ":=";
                 items.Add($"{key} {connector} {FormatVarRef(val)}");
             }
+            // 16-space indent for first param + comma-separated subsequent params
+            sb.Append("                ");
             sb.Append(string.Join(",\r\n                ", items));
         }
 
