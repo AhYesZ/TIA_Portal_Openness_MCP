@@ -1,0 +1,273 @@
+MultiLingualTexts:
+  - id: MLC_BlkC
+    zh-CN: 融合FB测试和LAD画廊和FC指令画廊三个Demo的全部指令，覆盖触点线圈边沿比较数学定时器计数器移位转换字逻辑块调用DB访问共67个网络
+  - id: MLC_BlkT
+    zh-CN: FB 完整指令画廊 合三为一标准案例
+  - id: MLC_N01c
+    zh-CN: 单触点驱动 Enable 接通输出 OUT_AND
+  - id: MLC_N01t
+    zh-CN: N01 基本触点驱动
+  - id: MLC_N02c
+    zh-CN: 三触点串联 AND Enable Trig Set 全部导通 OUT_AND
+  - id: MLC_N02t
+    zh-CN: N02 串联AND
+  - id: MLC_N03c
+    zh-CN: 串联取反 Enable 导通 NOT 取反后输出 OUT_NC
+  - id: MLC_N03t
+    zh-CN: N03 串联NOT取反
+  - id: MLC_N04c
+    zh-CN: 三路并联 OR Enable Trig Set 任意一个导通 OUT_OR
+  - id: MLC_N04t
+    zh-CN: N04 并联OR
+  - id: MLC_N05c
+    zh-CN: 置位线圈 Set 触发 S OUT_SR
+  - id: MLC_N05t
+    zh-CN: N05 置位线圈
+  - id: MLC_N06c
+    zh-CN: 复位线圈 Reset 触发 R OUT_SR
+  - id: MLC_N06t
+    zh-CN: N06 复位线圈
+  - id: MLC_N07c
+    zh-CN: 逻辑取反 Enable 导通 NOT OUT_NOT
+  - id: MLC_N07t
+    zh-CN: N07 逻辑取反NOT
+  - id: MLC_N08c
+    zh-CN: 上升沿检测 Trig 上升沿 OUT_P 输出一个脉冲
+  - id: MLC_N08t
+    zh-CN: N08 上升沿检测
+  - id: MLC_N09c
+    zh-CN: 下降沿检测 Trig 下降沿 OUT_N 输出一个脉冲
+  - id: MLC_N09t
+    zh-CN: N09 下降沿检测
+  - id: MLC_N10c
+    zh-CN: 比较触点 Int GT V1 大于 V2 时 OUT_GTc 接通
+  - id: MLC_N10t
+    zh-CN: N10 比较触点GT Int
+  - id: MLC_N11c
+    zh-CN: 比较触点 Int LT V1 小于 V2 时 OUT_LTc 接通
+  - id: MLC_N11t
+    zh-CN: N11 比较触点LT Int
+  - id: MLC_N12c
+    zh-CN: 比较触点 Int EQ V1 等于 V2 时 OUT_EQc 接通
+  - id: MLC_N12t
+    zh-CN: N12 比较触点EQ Int
+  - id: MLC_N13c
+    zh-CN: 比较触点 Int NE V1 不等于 V2 时 OUT_NEc 接通
+  - id: MLC_N13t
+    zh-CN: N13 比较触点NE Int
+  - id: MLC_N14c
+    zh-CN: 比较触点 Int GE V1 大于等于 V2 时 OUT_GEc 接通
+  - id: MLC_N14t
+    zh-CN: N14 比较触点GE Int
+  - id: MLC_N15c
+    zh-CN: 比较触点 Int LE V1 小于等于 V2 时 OUT_LEc 接通
+  - id: MLC_N15t
+    zh-CN: N15 比较触点LE Int
+  - id: MLC_N16c
+    zh-CN: 传送 Int V1 的值复制到 DST_Int
+  - id: MLC_N16t
+    zh-CN: N16 Move传送Int
+  - id: MLC_N17c
+    zh-CN: 加法 Int V1 加 V2 结果输出到 SUM_Int
+  - id: MLC_N17t
+    zh-CN: N17 Add加法Int
+  - id: MLC_N18c
+    zh-CN: 减法 Int V1 减 V2 结果输出到 DIFF_Int
+  - id: MLC_N18t
+    zh-CN: N18 Sub减法Int
+  - id: MLC_N19c
+    zh-CN: 乘法 Int V3 乘 V4 结果输出到 PROD_Int
+  - id: MLC_N19t
+    zh-CN: N19 Mul乘法Int
+  - id: MLC_N20c
+    zh-CN: 除法 Int V1 除 V2 结果输出到 QUOT_Int
+  - id: MLC_N20t
+    zh-CN: N20 Div除法Int
+  - id: MLC_N21c
+    zh-CN: 比较盒 Int GT V1 大于 V2 结果输出 OUT_GTb
+  - id: MLC_N21t
+    zh-CN: N21 比较盒GT Int
+  - id: MLC_N22c
+    zh-CN: 比较盒 Int LT V1 小于 V2 结果输出 OUT_LTb
+  - id: MLC_N22t
+    zh-CN: N22 比较盒LT Int
+  - id: MLC_N23c
+    zh-CN: 比较盒 Int EQ V1 等于 V2 结果输出 OUT_EQb
+  - id: MLC_N23t
+    zh-CN: N23 比较盒EQ Int
+  - id: MLC_N24c
+    zh-CN: 比较盒 Int NE V1 不等于 V2 结果输出 OUT_NEb
+  - id: MLC_N24t
+    zh-CN: N24 比较盒NE Int
+  - id: MLC_N25c
+    zh-CN: 比较盒 Int GE V1 大于等于 V2 结果输出 OUT_GEb
+  - id: MLC_N25t
+    zh-CN: N25 比较盒GE Int
+  - id: MLC_N26c
+    zh-CN: 比较盒 Int LE V1 小于等于 V2 结果输出 OUT_LEb
+  - id: MLC_N26t
+    zh-CN: N26 比较盒LE Int
+  - id: MLC_N27c
+    zh-CN: 触点加运算盒加线圈 Enable 导通时 Add V1加V2 结果输出 SUM_Int ENO驱动 OUT_CB
+  - id: MLC_N27t
+    zh-CN: N27 触点加运算盒加ENO线圈
+  - id: MLC_N28c
+    zh-CN: 多触点串联加比较盒 Enable和Trig导通时 GT比较V1和V2 结果输出 OUT_MCB
+  - id: MLC_N28t
+    zh-CN: N28 多触点加比较盒
+  - id: MLC_N29c
+    zh-CN: 复杂并联分支 Enable或Trig 与 Set或Reset 全部导通 OUT_CX
+  - id: MLC_N29t
+    zh-CN: N29 复杂并联分支
+  - id: MLC_N30c
+    zh-CN: 比较触点 Real GT R1 大于 R2 时 OUT_GTc 接通
+  - id: MLC_N30t
+    zh-CN: N30 比较触点GT Real
+  - id: MLC_N31c
+    zh-CN: 比较触点 Real LT R1 小于 R2 时 OUT_LTc 接通
+  - id: MLC_N31t
+    zh-CN: N31 比较触点LT Real
+  - id: MLC_N32c
+    zh-CN: 比较触点 Real EQ R1 等于 R2 时 OUT_EQc 接通
+  - id: MLC_N32t
+    zh-CN: N32 比较触点EQ Real
+  - id: MLC_N33c
+    zh-CN: 比较触点 Real NE R1 不等于 R2 时 OUT_NEc 接通
+  - id: MLC_N33t
+    zh-CN: N33 比较触点NE Real
+  - id: MLC_N34c
+    zh-CN: 传送 Real R1 的值复制到 DST_Real
+  - id: MLC_N34t
+    zh-CN: N34 Move传送Real
+  - id: MLC_N35c
+    zh-CN: 加法 Real R1 加 R2 结果输出到 SUM_Real
+  - id: MLC_N35t
+    zh-CN: N35 Add加法Real
+  - id: MLC_N36c
+    zh-CN: 减法 Real R1 减 R2 结果输出到 DIFF_Real
+  - id: MLC_N36t
+    zh-CN: N36 Sub减法Real
+  - id: MLC_N37c
+    zh-CN: 乘法 Real R1 乘 R2 结果输出到 PROD_Real
+  - id: MLC_N37t
+    zh-CN: N37 Mul乘法Real
+  - id: MLC_N38c
+    zh-CN: 除法 Real R1 除 R2 结果输出到 QUOT_Real
+  - id: MLC_N38t
+    zh-CN: N38 Div除法Real
+  - id: MLC_N39c
+    zh-CN: 取模 DInt DIntVal MOD 3 结果输出 OUT_ModDInt
+  - id: MLC_N39t
+    zh-CN: N39 Mod取模DInt
+  - id: MLC_N40c
+    zh-CN: 取负 Real 对R1取负数 结果输出 OUT_NegReal
+  - id: MLC_N40t
+    zh-CN: N40 Neg取负Real
+  - id: MLC_N41c
+    zh-CN: 最小值 Real MIN R1和R2取最小值 结果输出 OUT_MinReal
+  - id: MLC_N41t
+    zh-CN: N41 MIN最小值Real
+  - id: MLC_N42c
+    zh-CN: 最大值 Real MAX R1和R2 取最大值 结果输出 OUT_MaxReal
+  - id: MLC_N42t
+    zh-CN: N42 MAX最大值Real
+  - id: MLC_N43c
+    zh-CN: 限幅 Int Limit 限定范围0到100 V1超出时裁剪 结果输出 OUT_LimitInt
+  - id: MLC_N43t
+    zh-CN: N43 Limit限幅Int
+  - id: MLC_N44c
+    zh-CN: 选择 Int SEL Enable选择V1为假时选V2 结果输出 OUT_SelInt
+  - id: MLC_N44t
+    zh-CN: N44 SEL选择Int
+  - id: MLC_N45c
+    zh-CN: 多路选择 Int Mux V1选择0到3对应10 20 30 40 其他0 结果输出 OUT_MuxInt
+  - id: MLC_N45t
+    zh-CN: N45 Mux多路选择Int
+  - id: MLC_N46c
+    zh-CN: 右移 DWord DWordVal 右移4位 结果输出 OUT_ShrDWord
+  - id: MLC_N46t
+    zh-CN: N46 Shr右移DWord
+  - id: MLC_N47c
+    zh-CN: 左移 DWord DWordVal 左移4位 结果输出 OUT_ShlDWord
+  - id: MLC_N47t
+    zh-CN: N47 Shl左移DWord
+  - id: MLC_N48c
+    zh-CN: 类型转换 DInt转Real DIntVal 转 Real 结果输出 OUT_ConvReal
+  - id: MLC_N48t
+    zh-CN: N48 Convert DInt转Real
+  - id: MLC_N49c
+    zh-CN: 类型转换 Real转DInt R1 转 DInt 结果输出 OUT_ConvDInt
+  - id: MLC_N49t
+    zh-CN: N49 Convert Real转DInt
+  - id: MLC_N50c
+    zh-CN: SCL字逻辑运算 WordVal 与掩码 AND OR XOR 结果输出三个Word
+  - id: MLC_N50t
+    zh-CN: N50 字逻辑运算SCL
+  - id: MLC_N51c
+    zh-CN: TON接通延时 Trig触发 延时TimerPreset后TON_Q接通 ET实时输出
+  - id: MLC_N51t
+    zh-CN: N51 TON接通延时
+  - id: MLC_N52c
+    zh-CN: TOF断开延时 Trig触发后 TOF_Q立即接通 Trig断开后延时TimerPreset再断开
+  - id: MLC_N52t
+    zh-CN: N52 TOF断开延时
+  - id: MLC_N53c
+    zh-CN: TP脉冲定时器 Trig触发 TP_Q输出TimerPreset时长脉冲
+  - id: MLC_N53t
+    zh-CN: N53 TP脉冲定时器
+  - id: MLC_N54c
+    zh-CN: CTU加计数SCL大写参数 CountUp上升沿计数 达PresetValue时CTU_Q接通
+  - id: MLC_N54t
+    zh-CN: N54 CTU加计数SCL
+  - id: MLC_N55c
+    zh-CN: CTD减计数SCL大写参数 CountDown上升沿减计数 到0时CTD_Q接通
+  - id: MLC_N55t
+    zh-CN: N55 CTD减计数SCL
+  - id: MLC_N56c
+    zh-CN: CTUD加减计数SCL大写参数 CountUp加 CountDown减 QU QD分别为上限下限输出
+  - id: MLC_N56t
+    zh-CN: N56 CTUD加减计数SCL
+  - id: MLC_N57c
+    zh-CN: TON加双触点条件 Enable和Trig同时导通启动1s延时 TON_Q输出
+  - id: MLC_N57t
+    zh-CN: N57 TON加双触点条件
+  - id: MLC_N58c
+    zh-CN: TOF常量预设 Trig触发 TOF_Q接通 断开后延时T井号2s再断开
+  - id: MLC_N58t
+    zh-CN: N58 TOF常量预设
+  - id: MLC_N59c
+    zh-CN: CTU加计数加上升沿LAD小写参数 Trig上升沿触发CTU 达PresetValue时CTU_Q接通
+  - id: MLC_N59t
+    zh-CN: N59 CTU加计数加上升沿LAD
+  - id: MLC_N60c
+    zh-CN: CTD减计数加上升沿LAD小写参数 Trig上升沿触发CTD 到0时CTD_Q接通
+  - id: MLC_N60t
+    zh-CN: N60 CTD减计数加上升沿LAD
+  - id: MLC_N61c
+    zh-CN: CTUD加减计数加上升沿LAD小写参数 Trig上升沿触发CTUD CountDown为减方向
+  - id: MLC_N61t
+    zh-CN: N61 CTUD加减计数加上升沿LAD
+  - id: MLC_N62c
+    zh-CN: FB实例调用 调用FB_BasicLatch实现自锁和故障锁存功能
+  - id: MLC_N62t
+    zh-CN: N62 FB实例调用
+  - id: MLC_N63c
+    zh-CN: FC调用加触点条件 Enable导通时调用FC_BasicScaleLimit进行工程量缩放
+  - id: MLC_N63t
+    zh-CN: N63 FC调用加触点条件
+  - id: MLC_N64c
+    zh-CN: DB访问 V90_Drive1_ZSW1点位读取和DB_HMI_Interface成员读取
+  - id: MLC_N64t
+    zh-CN: N64 DB位与成员访问
+  - id: MLC_N65c
+    zh-CN: 链式计算 Add加V1和V2 Mul乘2 盒串联在同一RUNG
+  - id: MLC_N65t
+    zh-CN: N65 链式计算
+  - id: MLC_N66c
+    zh-CN: 复杂三路并联 Enable Trig上升沿 R1大于50 任意一路导通 OUT_Or3Branch
+  - id: MLC_N66t
+    zh-CN: N66 三路并联OR加边沿加比较
+  - id: MLC_N67c
+    zh-CN: 多输出线圈 单一Enable触点同时驱动OUT_MultiA和OUT_MultiB两个输出
+  - id: MLC_N67t
+    zh-CN: N67 多输出线圈

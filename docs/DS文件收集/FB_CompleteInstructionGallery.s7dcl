@@ -1,0 +1,1207 @@
+{
+    S7_BlockComment := "MLC_BlkC";
+    S7_BlockNumber := "952";
+    S7_BlockTitle := "MLC_BlkT";
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "LAD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "FB_CompleteInstructionGallery"
+    VAR_INPUT
+        "Enable" : Bool;
+        "Trig" : Bool;
+        "Set" : Bool;
+        "Reset" : Bool;
+        "CountUp" : Bool;
+        "CountDown" : Bool;
+        "LoadPv" : Bool;
+        "V1" : Int;
+        "V2" : Int;
+        "V3" : Int;
+        "V4" : Int;
+        "PresetValue" : Int;
+        "R1" : Real;
+        "R2" : Real;
+        "TimerPreset" : Time;
+        "DIntVal" : DInt;
+        "DWordVal" : DWord;
+        "WordVal" : Word;
+    END_VAR
+    VAR_OUTPUT
+        "OUT_AND" : Bool;
+        "OUT_NC" : Bool;
+        "OUT_OR" : Bool;
+        "OUT_SR" : Bool;
+        "OUT_NOT" : Bool;
+        "OUT_P" : Bool;
+        "OUT_N" : Bool;
+        "OUT_GTc" : Bool;
+        "OUT_LTc" : Bool;
+        "OUT_EQc" : Bool;
+        "OUT_NEc" : Bool;
+        "OUT_GEc" : Bool;
+        "OUT_LEc" : Bool;
+        "OUT_GTb" : Bool;
+        "OUT_LTb" : Bool;
+        "OUT_EQb" : Bool;
+        "OUT_NEb" : Bool;
+        "OUT_GEb" : Bool;
+        "OUT_LEb" : Bool;
+        "OUT_CB" : Bool;
+        "OUT_MCB" : Bool;
+        "OUT_CX" : Bool;
+        "TON_Q" : Bool;
+        "TOF_Q" : Bool;
+        "TP_Q" : Bool;
+        "TON_ET" : Time;
+        "TOF_ET" : Time;
+        "TP_ET" : Time;
+        "CTU_Q" : Bool;
+        "CTD_Q" : Bool;
+        "CTUD_QU" : Bool;
+        "CTUD_QD" : Bool;
+        "CTU_CV" : Int;
+        "CTD_CV" : Int;
+        "CTUD_CV" : Int;
+        "OUT_Or3Branch" : Bool;
+        "OUT_MultiA" : Bool;
+        "OUT_MultiB" : Bool;
+        "OUT_SysReady" : Bool;
+        "OUT_SysFaultLed" : Bool;
+        "DST_Int" : Int;
+        "SUM_Int" : Int;
+        "DIFF_Int" : Int;
+        "PROD_Int" : Int;
+        "QUOT_Int" : Int;
+        "DST_Real" : Real;
+        "SUM_Real" : Real;
+        "DIFF_Real" : Real;
+        "PROD_Real" : Real;
+        "QUOT_Real" : Real;
+        "OUT_LimitInt" : Int;
+        "OUT_SelInt" : Int;
+        "OUT_MuxInt" : Int;
+        "OUT_ChainCalc" : Int;
+        "OUT_NegReal" : Real;
+        "OUT_MinReal" : Real;
+        "OUT_MaxReal" : Real;
+        "OUT_ConvReal" : Real;
+        "OUT_ConvDInt" : DInt;
+        "OUT_ModDInt" : DInt;
+        "OUT_ShrDWord" : DWord;
+        "OUT_ShlDWord" : DWord;
+        "OUT_AndWord" : Word;
+        "OUT_OrWord" : Word;
+        "OUT_XorWord" : Word;
+        "OUT_ScaleEngReal" : Real;
+        "OUT_ScaleValid" : Bool;
+        "OUT_ScaleClamped" : Bool;
+        "Latch_Active" : Bool;
+        "Latch_Fault" : Bool;
+        "Latch_Healthy" : Bool;
+    END_VAR
+    VAR
+        "tonInst" : TON_TIME;
+        "tofInst" : TOF_TIME;
+        "tpInst" : TP_TIME;
+        "ctuInst" : CTU_INT;
+        "ctdInst" : CTD_INT;
+        "ctudInst" : CTUD_INT;
+        "ctuEdgeInst" : CTU_INT;
+        "ctdEdgeInst" : CTD_INT;
+        "ctudEdgeInst" : CTUD_INT;
+        "LatchInst" : _.FB_BasicLatch;
+    END_VAR
+    VAR_TEMP
+        "P_Work" : Bool;
+        "N_Work" : Bool;
+        "EdgeWorkCtu" : Bool;
+        "EdgeWorkCtd" : Bool;
+        "EdgeWorkCtud" : Bool;
+        "TmpEdgeTrig" : Bool;
+        "TmpInt" : Int;
+        "TmpReal" : Real;
+        "TmpBool" : Bool;
+    END_VAR
+
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N01c";
+        S7_NetworkTitle := "MLC_N01t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            Coil( #"OUT_AND" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N02c";
+        S7_NetworkTitle := "MLC_N02t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            Contact( #"Trig" )
+            Contact( #"Set" )
+            Coil( #"OUT_AND" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N03c";
+        S7_NetworkTitle := "MLC_N03t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            Not()
+            Coil( #"OUT_NC" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N04c";
+        S7_NetworkTitle := "MLC_N04t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            wire#w1
+            Coil( #"OUT_OR" )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+        END_RUNG wire#w1
+        RUNG wire#powerrail
+            Contact( #"Set" )
+        END_RUNG wire#w1
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N05c";
+        S7_NetworkTitle := "MLC_N05t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Set" )
+            S_Coil( #"OUT_SR" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N06c";
+        S7_NetworkTitle := "MLC_N06t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Reset" )
+            R_Coil( #"OUT_SR" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N07c";
+        S7_NetworkTitle := "MLC_N07t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            Not()
+            Coil( #"OUT_NOT" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N08c";
+        S7_NetworkTitle := "MLC_N08t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            P_Trig( #"P_Work" )
+            Coil( #"OUT_P" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N09c";
+        S7_NetworkTitle := "MLC_N09t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            N_Trig( #"N_Work" )
+            Coil( #"OUT_N" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N10c";
+        S7_NetworkTitle := "MLC_N10t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            GT_Contact(
+                in1 := #"V1",
+                in2 := #"V2"
+            )
+            Coil( #"OUT_GTc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N11c";
+        S7_NetworkTitle := "MLC_N11t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            LT_Contact(
+                in1 := #"V1",
+                in2 := #"V2"
+            )
+            Coil( #"OUT_LTc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N12c";
+        S7_NetworkTitle := "MLC_N12t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #"V1",
+                in2 := #"V2"
+            )
+            Coil( #"OUT_EQc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N13c";
+        S7_NetworkTitle := "MLC_N13t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            NE_Contact(
+                in1 := #"V1",
+                in2 := #"V2"
+            )
+            Coil( #"OUT_NEc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N14c";
+        S7_NetworkTitle := "MLC_N14t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            GE_Contact(
+                in1 := #"V1",
+                in2 := #"V2"
+            )
+            Coil( #"OUT_GEc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N15c";
+        S7_NetworkTitle := "MLC_N15t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            LE_Contact(
+                in1 := #"V1",
+                in2 := #"V2"
+            )
+            Coil( #"OUT_LEc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N16c";
+        S7_NetworkTitle := "MLC_N16t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+
+            Move(
+                in := #"V1",
+                out1 => #"DST_Int"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N17c";
+        S7_NetworkTitle := "MLC_N17t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Add(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"SUM_Int"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N18c";
+        S7_NetworkTitle := "MLC_N18t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Sub(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"DIFF_Int"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N19c";
+        S7_NetworkTitle := "MLC_N19t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Mul(
+                in1 := #"V3",
+                in2 := #"V4",
+                out => #"PROD_Int"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N20c";
+        S7_NetworkTitle := "MLC_N20t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Div(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"QUOT_Int"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N21c";
+        S7_NetworkTitle := "MLC_N21t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            GT(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"OUT_GTb"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N22c";
+        S7_NetworkTitle := "MLC_N22t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            LT(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"OUT_LTb"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N23c";
+        S7_NetworkTitle := "MLC_N23t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            EQ(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"OUT_EQb"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N24c";
+        S7_NetworkTitle := "MLC_N24t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            NE(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"OUT_NEb"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N25c";
+        S7_NetworkTitle := "MLC_N25t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            GE(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"OUT_GEb"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N26c";
+        S7_NetworkTitle := "MLC_N26t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            LE(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"OUT_LEb"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N27c";
+        S7_NetworkTitle := "MLC_N27t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Add(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"SUM_Int"
+            )
+            Coil( #"OUT_CB" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N28c";
+        S7_NetworkTitle := "MLC_N28t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            Contact( #"Trig" )
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            GT(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"OUT_MCB"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N29c";
+        S7_NetworkTitle := "MLC_N29t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            wire#w2
+            Contact( #"Set" )
+            wire#w3
+            Coil( #"OUT_CX" )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+        END_RUNG wire#w2
+        RUNG wire#powerrail
+            Contact( #"Reset" )
+        END_RUNG wire#w3
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N30c";
+        S7_NetworkTitle := "MLC_N30t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            GT_Contact(
+                in1 := #"R1",
+                in2 := #"R2"
+            )
+            Coil( #"OUT_GTc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N31c";
+        S7_NetworkTitle := "MLC_N31t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            LT_Contact(
+                in1 := #"R1",
+                in2 := #"R2"
+            )
+            Coil( #"OUT_LTc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N32c";
+        S7_NetworkTitle := "MLC_N32t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            EQ_Contact(
+                in1 := #"R1",
+                in2 := #"R2"
+            )
+            Coil( #"OUT_EQc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N33c";
+        S7_NetworkTitle := "MLC_N33t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            NE_Contact(
+                in1 := #"R1",
+                in2 := #"R2"
+            )
+            Coil( #"OUT_NEc" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N34c";
+        S7_NetworkTitle := "MLC_N34t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+
+            Move(
+                in := #"R1",
+                out1 => #"DST_Real"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N35c";
+        S7_NetworkTitle := "MLC_N35t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Real"
+            }
+            Add(
+                in1 := #"R1",
+                in2 := #"R2",
+                out => #"SUM_Real"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N36c";
+        S7_NetworkTitle := "MLC_N36t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Real"
+            }
+            Sub(
+                in1 := #"R1",
+                in2 := #"R2",
+                out => #"DIFF_Real"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N37c";
+        S7_NetworkTitle := "MLC_N37t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Real"
+            }
+            Mul(
+                in1 := #"R1",
+                in2 := #"R2",
+                out => #"PROD_Real"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N38c";
+        S7_NetworkTitle := "MLC_N38t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Real"
+            }
+            Div(
+                in1 := #"R1",
+                in2 := #"R2",
+                out => #"QUOT_Real"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N39c";
+        S7_NetworkTitle := "MLC_N39t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := DInt"
+            }
+            Mod(
+                in1 := #"DIntVal",
+                in2 := DINT#3,
+                out => #"OUT_ModDInt"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N40c";
+        S7_NetworkTitle := "MLC_N40t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Real"
+            }
+            Neg(
+                in := #"R1",
+                out => #"OUT_NegReal"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N41c";
+        S7_NetworkTitle := "MLC_N41t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "value_type := Real";
+                S7_GenerateENO := "TRUE"
+            }
+            MIN(
+                in1 := #"R1",
+                in2 := #"R2",
+                out => #"OUT_MinReal"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N42c";
+        S7_NetworkTitle := "MLC_N42t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "value_type := Real";
+                S7_GenerateENO := "TRUE"
+            }
+            MAX(
+                in1 := #"R1",
+                in2 := #"R2",
+                out => #"OUT_MaxReal"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N43c";
+        S7_NetworkTitle := "MLC_N43t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "value_type := Int";
+                S7_GenerateENO := "TRUE"
+            }
+            Limit(
+                min := 0,
+                in := #"V1",
+                max := 100,
+                out => #"OUT_LimitInt"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N44c";
+        S7_NetworkTitle := "MLC_N44t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "value_type := Int" }
+            SEL(
+                g := #"Enable",
+                in0 := #"V1",
+                in1 := #"V2",
+                out => #"OUT_SelInt"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N45c";
+        S7_NetworkTitle := "MLC_N45t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Int" }
+            Mux(
+                k := #"V1",
+                in0 := 10,
+                in1 := 20,
+                in2 := 30,
+                in3 := 40,
+                else := 0,
+                out => #"OUT_MuxInt"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N46c";
+        S7_NetworkTitle := "MLC_N46t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := DWord"
+            }
+            Shr(
+                in := #"DWordVal",
+                n := 4,
+                out => #"OUT_ShrDWord"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N47c";
+        S7_NetworkTitle := "MLC_N47t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := DWord"
+            }
+            Shl(
+                in := #"DWordVal",
+                n := 4,
+                out => #"OUT_ShlDWord"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N48c";
+        S7_NetworkTitle := "MLC_N48t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "[SrcType := DInt, DestType := Real]"
+            }
+            Convert(
+                in := #"DIntVal",
+                out => #"OUT_ConvReal"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N49c";
+        S7_NetworkTitle := "MLC_N49t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "[SrcType := Real, DestType := DInt]"
+            }
+            Convert(
+                in := #"R1",
+                out => #"OUT_ConvDInt"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "SCL";
+        S7_NetworkComment := "MLC_N50c";
+        S7_NetworkTitle := "MLC_N50t"
+    }
+    NETWORK
+        #"OUT_AndWord" := #"WordVal" AND W#16#00FF;
+        #"OUT_OrWord" := #"WordVal" OR W#16#FF00;
+        #"OUT_XorWord" := #"WordVal" XOR W#16#FFFF;
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N51c";
+        S7_NetworkTitle := "MLC_N51t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            { S7_Templates := "time_type := Time" }
+            #"tonInst".TON(
+                pt := #"TimerPreset",
+                q => #"TON_Q",
+                et => #"TON_ET"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N52c";
+        S7_NetworkTitle := "MLC_N52t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            { S7_Templates := "time_type := Time" }
+            #"tofInst".TOF(
+                pt := #"TimerPreset",
+                q => #"TOF_Q",
+                et => #"TOF_ET"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N53c";
+        S7_NetworkTitle := "MLC_N53t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            { S7_Templates := "time_type := Time" }
+            #"tpInst".TP(
+                pt := #"TimerPreset",
+                q => #"TP_Q",
+                et => #"TP_ET"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "SCL";
+        S7_NetworkComment := "MLC_N54c";
+        S7_NetworkTitle := "MLC_N54t"
+    }
+    NETWORK
+        #"ctuInst".CTU(CU := #"CountUp",
+                       R := #"Reset",
+                       PV := #"PresetValue",
+                       Q => #"CTU_Q",
+                       CV => #"CTU_CV");
+    END_NETWORK
+    {
+        S7_Language := "SCL";
+        S7_NetworkComment := "MLC_N55c";
+        S7_NetworkTitle := "MLC_N55t"
+    }
+    NETWORK
+        #"ctdInst".CTD(CD := #"CountDown",
+                       LD := #"LoadPv",
+                       PV := #"PresetValue",
+                       Q => #"CTD_Q",
+                       CV => #"CTD_CV");
+    END_NETWORK
+    {
+        S7_Language := "SCL";
+        S7_NetworkComment := "MLC_N56c";
+        S7_NetworkTitle := "MLC_N56t"
+    }
+    NETWORK
+        #"ctudInst".CTUD(CU := #"CountUp",
+                         CD := #"CountDown",
+                         R := #"Reset",
+                         LD := #"LoadPv",
+                         PV := #"PresetValue",
+                         QU => #"CTUD_QU",
+                         QD => #"CTUD_QD",
+                         CV => #"CTUD_CV");
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N57c";
+        S7_NetworkTitle := "MLC_N57t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            Contact( #"Trig" )
+            { S7_Templates := "time_type := Time" }
+            #"tonInst".TON(
+                pt := T#1s,
+                q => #"TON_Q",
+                et => #"TON_ET"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N58c";
+        S7_NetworkTitle := "MLC_N58t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            { S7_Templates := "time_type := Time" }
+            #"tofInst".TOF(
+                pt := T#2s,
+                q => #"TOF_Q",
+                et => #"TOF_ET"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N59c";
+        S7_NetworkTitle := "MLC_N59t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            P_Trig( #"EdgeWorkCtu" )
+            { S7_Templates := "value_type := Int" }
+            #"ctuEdgeInst".CTU(
+                r := #"Reset",
+                pv := #"PresetValue",
+                cv => #"CTU_CV"
+            )
+            Coil( #"CTU_Q" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N60c";
+        S7_NetworkTitle := "MLC_N60t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            P_Trig( #"EdgeWorkCtd" )
+            { S7_Templates := "value_type := Int" }
+            #"ctdEdgeInst".CTD(
+                ld := #"LoadPv",
+                pv := #"PresetValue",
+                cv => #"CTD_CV"
+            )
+            Coil( #"CTD_Q" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N61c";
+        S7_NetworkTitle := "MLC_N61t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            P_Trig( #"EdgeWorkCtud" )
+            { S7_Templates := "value_type := Int" }
+            #"ctudEdgeInst".CTUD(
+                cd := #"CountDown",
+                r := #"Reset",
+                ld := #"LoadPv",
+                pv := #"PresetValue",
+                qd => #"CTUD_QD",
+                cv => #"CTUD_CV"
+            )
+            Coil( #"CTUD_QU" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N62c";
+        S7_NetworkTitle := "MLC_N62t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            #"LatchInst"(
+                Enable := #"Enable",
+                Disable := #"Reset",
+                FaultInput := #"OUT_SysFaultLed",
+                Reset := FALSE,
+                Active => #"Latch_Active",
+                Fault => #"Latch_Fault",
+                Healthy => #"Latch_Healthy"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N63c";
+        S7_NetworkTitle := "MLC_N63t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            wire#w4
+            "FC_BasicScaleLimit"(
+                RawValue := #"R1",
+                RawMin := 0.0,
+                RawMax := 100.0,
+                EngMin := 0.0,
+                EngMax := 10.0,
+                EngValue => #"OUT_ScaleEngReal",
+                Valid => #"OUT_ScaleValid",
+                Clamped => #"OUT_ScaleClamped"
+            )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #"Reset" )
+        END_RUNG wire#w4
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N64c";
+        S7_NetworkTitle := "MLC_N64t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( "V90_Drive1_ZSW1".%X0 )
+            Coil( #"OUT_SysReady" )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( "DB_HMI_Interface".SystemFault )
+            Coil( #"OUT_SysFaultLed" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N65c";
+        S7_NetworkTitle := "MLC_N65t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Add(
+                in1 := #"V1",
+                in2 := #"V2",
+                out => #"TmpInt"
+            )
+            {
+                S7_Templates := "SrcType := Int"
+            }
+            Mul(
+                in1 := #"TmpInt",
+                in2 := 2,
+                out => #"OUT_ChainCalc"
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N66c";
+        S7_NetworkTitle := "MLC_N66t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            wire#w5
+            Coil( #"OUT_Or3Branch" )
+        END_RUNG
+        RUNG wire#powerrail
+            Contact( #"Trig" )
+            P_Trig( #"TmpEdgeTrig" )
+        END_RUNG wire#w5
+        RUNG wire#powerrail
+            { S7_Templates := "SrcType := Real" }
+            GT_Contact(
+                in1 := #"R1",
+                in2 := 50.0
+            )
+            Coil( #"OUT_Or3Branch" )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "LAD";
+        S7_NetworkComment := "MLC_N67c";
+        S7_NetworkTitle := "MLC_N67t"
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #"Enable" )
+            Coil( #"OUT_MultiA" )
+            Coil( #"OUT_MultiB" )
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK
