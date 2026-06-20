@@ -111,6 +111,7 @@ namespace TiaMcpServer
         public string? ProjectName { get; set; }
         public int? TiaStepTimeoutSeconds { get; set; }
         public bool PortalWithUserInterface { get; set; } // --with-ui: launch TIA with full GUI (slower) instead of headless
+        public bool ShowMachineId { get; set; } // --show-machine-id: print hardware fingerprint and exit
 
         public static CliOptions ParseArgs(string[] args)
         {
@@ -745,6 +746,10 @@ namespace TiaMcpServer
                             options.HttpApiKey = args[i + 1];
                             i++;
                         }
+                        break;
+
+                    case "--show-machine-id":
+                        options.ShowMachineId = true;
                         break;
                 }
             }
