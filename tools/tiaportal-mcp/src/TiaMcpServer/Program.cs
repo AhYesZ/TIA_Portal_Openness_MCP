@@ -506,6 +506,19 @@ namespace TiaMcpServer
                         return;
                     }
 
+                    // ── License validation ────────────────────────────
+                    {
+                        var (licenseOk, licenseMsg) = await LicenseValidator.Validate(
+                            options.LicenseKey,
+                            options.LicenseServerUrl ?? "http://localhost:5000");
+                        LogDiag(licenseMsg);
+                        if (!licenseOk)
+                        {
+                            LogDiag("LICENSE DENIED — exiting (code 7)");
+                            Environment.Exit(7);
+                        }
+                    }
+
                     if (string.Equals(options.Transport, "http", StringComparison.OrdinalIgnoreCase))
                     {
                         await RunHttpHost(options);

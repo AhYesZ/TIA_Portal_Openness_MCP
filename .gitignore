@@ -1,14 +1,16 @@
-*.log
-*.startup.log
+# License keys (private key must never be committed)
+keys/
+
+# Build output
+bin/
+bin-v20/
+obj/
+obj-v20/
+
+# IDE
 .vs/
-**/obj/
-**/obj-v20/
-**/bin/Debug/
-**/bin-v20/Debug/
-**/bin/Release/
-**/bin-v20/Release/
-TiaMcp_Output/
 *.user
 *.suo
-Thumbs.db
-Desktop.ini
+
+# Logs
+*.log
